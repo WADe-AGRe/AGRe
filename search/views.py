@@ -146,7 +146,10 @@ class SearchResultViewSet(viewsets.ModelViewSet):
         """destroy method docstring"""
         return super(SearchResultViewSet, self).destroy(request, *args, **kwargs)
 
-
+@method_decorator(name='list', decorator=swagger_auto_schema(
+    operation_description="description from swagger_auto_schema via method_decorator",
+    filter_inspectors=[DjangoFilterDescriptionInspector]
+))
 class PersonViewSet(viewsets.ModelViewSet):
     """
     ArticleViewSet class docstring
