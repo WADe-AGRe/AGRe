@@ -1,7 +1,7 @@
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 
-from .models import SearchResult, Person
+from .models import SearchResult
 
 
 class SearchResultSerializer(serializers.ModelSerializer):
@@ -28,9 +28,3 @@ class SearchResultSerializer(serializers.ModelSerializer):
                                "defaults to the currently logged in user.")
             },
         }
-
-
-class PersonSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Person
-        fields = {'jobTitle'}
