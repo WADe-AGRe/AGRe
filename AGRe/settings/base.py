@@ -25,6 +25,14 @@ INSTALLED_APPS = [
     'corsheaders',
 
     'drf_yasg',
+    'schemaorgschemas',
+    'django.contrib.sites',
+    'phonenumber_field',
+    'isbn_field',
+    'search',
+    'resource',
+    'users',
+
 ]
 
 MIDDLEWARE = [

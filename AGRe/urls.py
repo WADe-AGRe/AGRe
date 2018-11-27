@@ -62,5 +62,6 @@ urlpatterns = [
 
     url(r'^admin/', admin.site.urls),
     url(r'^search/', include('search.urls')),
+    url(r'^resource/', include('resource.urls')),
 
 ]
