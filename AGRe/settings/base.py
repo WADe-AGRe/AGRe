@@ -31,7 +31,7 @@ INSTALLED_APPS = [
     'todo',
     'people',
     'search',
-	'recommender'
+    'recommender'
 ]
 
 MIDDLEWARE = [

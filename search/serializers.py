@@ -1,7 +1,7 @@
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 
-from search.models import SearchResult
+from .models import SearchResult
 
 
 class SearchResultSerializer(serializers.ModelSerializer):

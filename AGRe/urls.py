@@ -13,14 +13,14 @@ swagger_info = openapi.Info(
     default_version='v1',
     description='''AGRe is application designed to search for learning resources, filter the results and 
     make intelligent predictions using data about the users''',
-#     description="""This is a demo project for the [drf-yasg](https://github.com/axnsan12/drf-yasg) Django Rest Framework library.
-#
-# The `swagger-ui` view can be found [here](/cached/swagger).
-# The `ReDoc` view can be found [here](/cached/redoc).
-# The swagger YAML document can be found [here](/cached/swagger.yaml).
-#
-# You can log in using the pre-existing `admin` user with password `passwordadmin`.""",  # noqa
-# contact=openapi.Contact(email="andreiacob37@gmail.com"),
+    #     description="""This is a demo project for the [drf-yasg](https://github.com/axnsan12/drf-yasg) Django Rest Framework library.
+    #
+    # The `swagger-ui` view can be found [here](/cached/swagger).
+    # The `ReDoc` view can be found [here](/cached/redoc).
+    # The swagger YAML document can be found [here](/cached/swagger.yaml).
+    #
+    # You can log in using the pre-existing `admin` user with password `passwordadmin`.""",  # noqa
+    # contact=openapi.Contact(email="andreiacob37@gmail.com"),
     license=openapi.License(name="CC-BY License"),
 )
 
