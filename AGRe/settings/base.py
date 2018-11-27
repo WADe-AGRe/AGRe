@@ -25,13 +25,6 @@ INSTALLED_APPS = [
     'corsheaders',
 
     'drf_yasg',
-    'snippets',
-    'users',
-    'articles',
-    'todo',
-    'people',
-    'search',
-    'recommender'
 ]
 
 MIDDLEWARE = [
