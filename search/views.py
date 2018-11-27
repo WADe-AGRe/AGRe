@@ -11,7 +11,7 @@ from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 
 from search import serializers
-from search.models import SearchResult
+from search.models import SearchResult, Person
 from drf_yasg import openapi
 from drf_yasg.app_settings import swagger_settings
 from drf_yasg.inspectors import CoreAPICompatInspector, FieldInspector, NotHandled, SwaggerAutoSchema
@@ -145,3 +145,83 @@ class SearchResultViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         """destroy method docstring"""
         return super(SearchResultViewSet, self).destroy(request, *args, **kwargs)
+
+
+class PersonViewSet(viewsets.ModelViewSet):
+    """
+    ArticleViewSet class docstring
+
+    retrieve:
+    retrieve class docstring
+
+    destroy:
+    destroy class docstring
+
+    partial_update:
+    partial_update class docstring
+    """
+    queryset = Person.objects.all()
+    lookup_field = 'slug'
+    lookup_value_regex = r'[a-z0-9]+(?:-[a-z0-9]+)'
+    serializer_class = serializers.PersonSerializer
+
+    pagination_class = ArticlePagination
+    filter_backends = (DjangoFilterBackend, OrderingFilter)
+
+    swagger_schema = NoTitleAutoSchema
+
+    try:
+        from rest_framework.decorators import action
+
+        @swagger_auto_schema(auto_schema=NoPagingAutoSchema, filter_inspectors=[DjangoFilterDescriptionInspector])
+        @action(detail=False, methods=['get'])
+        def today(self, request):
+            today_min = datetime.datetime.combine(datetime.date.today(), datetime.time.min)
+            today_max = datetime.datetime.combine(datetime.date.today(), datetime.time.max)
+            articles = self.get_queryset().filter(date_created__range=(today_min, today_max)).all()
+            serializer = self.serializer_class(articles, many=True)
+            return Response(serializer.data)
+
+        @swagger_auto_schema(method='get', operation_description="image GET description override")
+        @action(detail=True, methods=['get', 'post'], parser_classes=(MultiPartParser,))
+        def image(self, request, slug=None):
+            """
+            image method docstring
+            """
+            pass
+    except ImportError:
+        action = None
+
+        # noinspection PyDeprecation
+        @swagger_auto_schema(auto_schema=NoPagingAutoSchema, filter_inspectors=[DjangoFilterDescriptionInspector])
+        @list_route(methods=['get'])
+        def today(self, request):
+            today_min = datetime.datetime.combine(datetime.date.today(), datetime.time.min)
+            today_max = datetime.datetime.combine(datetime.date.today(), datetime.time.max)
+            articles = self.get_queryset().filter(date_created__range=(today_min, today_max)).all()
+            serializer = self.serializer_class(articles, many=True)
+            return Response(serializer.data)
+
+        # noinspection PyDeprecation
+        @swagger_auto_schema(method='get', operation_description="image GET description override")
+        @detail_route(methods=['get', 'post'], parser_classes=(MultiPartParser,))
+        def image(self, request, slug=None):
+            """
+            image method docstring
+            """
+            pass
+
+    @swagger_auto_schema(request_body=no_body, operation_id='no_body_test')
+    def update(self, request, *args, **kwargs):
+        """update method docstring"""
+        return super().update(request, *args, **kwargs)
+
+    @swagger_auto_schema(operation_description="partial_update description override", responses={404: 'slug not found'},
+                         operation_summary='partial_update summary', deprecated=True)
+    def partial_update(self, request, *args, **kwargs):
+        """partial_update method docstring"""
+        return super().partial_update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        """destroy method docstring"""
+        return super().destroy(request, *args, **kwargs)

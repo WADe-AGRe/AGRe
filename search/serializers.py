@@ -1,7 +1,7 @@
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 
-from .models import SearchResult
+from .models import SearchResult, Person
 
 
 class SearchResultSerializer(serializers.ModelSerializer):
@@ -29,3 +29,8 @@ class SearchResultSerializer(serializers.ModelSerializer):
             },
         }
 
+
+class PersonSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Person
+        fields = {'jobTitle'}
