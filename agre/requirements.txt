@@ -1,0 +1,2 @@
+..[validation]
+-r ../requirements/testproj.txt
