@@ -7,7 +7,7 @@ Considering various opinions (gossips, reviews, surveys, multilingual comments e
 * Iacob Andrei Constantin
 * Nechita Mihai
 
-##Relevant links
+## Relevant links
 * Wireframes: https://5tdugv.axshare.com/#g=1&p=home_1 (pass: daw2018)
 * Blog's Github: https://github.com/WADe-AGRe/WADe-AGRe.github.io
 * Scholarly HTML: https://github.com/WADe-AGRe/WADe-AGRe.github.io/tree/master/Scholarly%20HTML
