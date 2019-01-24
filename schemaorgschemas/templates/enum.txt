@@ -1,1 +1,0 @@
-itemprop="{{schema_prop}}" href="{{enum_prop}}"

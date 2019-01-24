@@ -1,1 +1,0 @@
-itemprop="{{schema_prop}}" datetime="{{value|date:'c'}}"
