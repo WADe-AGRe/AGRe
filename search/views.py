@@ -2,7 +2,7 @@ import datetime
 
 from django.utils.decorators import method_decorator
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import viewsets
+from rest_framework import viewsets, mixins
 # noinspection PyDeprecation
 from rest_framework.decorators import detail_route, list_route
 from rest_framework.filters import OrderingFilter
@@ -60,11 +60,12 @@ class ArticlePagination(LimitOffsetPagination):
     max_limit = 25
 
 
-@method_decorator(name='list', decorator=swagger_auto_schema(
+@method_decorator(name='retrieve', decorator=swagger_auto_schema(
     operation_description="description from swagger_auto_schema via method_decorator",
     filter_inspectors=[DjangoFilterDescriptionInspector]
 ))
-class SearchResultViewSet(viewsets.ModelViewSet):
+class SearchResultViewSet(mixins.RetrieveModelMixin,
+                          viewsets.GenericViewSet):
     """
     ArticleViewSet class docstring
 
@@ -89,59 +90,3 @@ class SearchResultViewSet(viewsets.ModelViewSet):
     ordering = ('date_created',)
 
     swagger_schema = NoTitleAutoSchema
-
-    try:
-        from rest_framework.decorators import action
-
-        @swagger_auto_schema(auto_schema=NoPagingAutoSchema, filter_inspectors=[DjangoFilterDescriptionInspector])
-        @action(detail=False, methods=['get'])
-        def today(self, request):
-            today_min = datetime.datetime.combine(datetime.date.today(), datetime.time.min)
-            today_max = datetime.datetime.combine(datetime.date.today(), datetime.time.max)
-            articles = self.get_queryset().filter(date_created__range=(today_min, today_max)).all()
-            serializer = self.serializer_class(articles, many=True)
-            return Response(serializer.data)
-
-        @swagger_auto_schema(method='get', operation_description="image GET description override")
-        @action(detail=True, methods=['get', 'post'], parser_classes=(MultiPartParser,))
-        def image(self, request, slug=None):
-            """
-            image method docstring
-            """
-            pass
-    except ImportError:
-        action = None
-
-        # noinspection PyDeprecation
-        @swagger_auto_schema(auto_schema=NoPagingAutoSchema, filter_inspectors=[DjangoFilterDescriptionInspector])
-        @list_route(methods=['get'])
-        def today(self, request):
-            today_min = datetime.datetime.combine(datetime.date.today(), datetime.time.min)
-            today_max = datetime.datetime.combine(datetime.date.today(), datetime.time.max)
-            articles = self.get_queryset().filter(date_created__range=(today_min, today_max)).all()
-            serializer = self.serializer_class(articles, many=True)
-            return Response(serializer.data)
-
-        # noinspection PyDeprecation
-        @swagger_auto_schema(method='get', operation_description="image GET description override")
-        @detail_route(methods=['get', 'post'], parser_classes=(MultiPartParser,))
-        def image(self, request, slug=None):
-            """
-            image method docstring
-            """
-            pass
-
-    @swagger_auto_schema(request_body=no_body, operation_id='no_body_test')
-    def update(self, request, *args, **kwargs):
-        """update method docstring"""
-        return super(SearchResultViewSet, self).update(request, *args, **kwargs)
-
-    @swagger_auto_schema(operation_description="partial_update description override", responses={404: 'slug not found'},
-                         operation_summary='partial_update summary', deprecated=True)
-    def partial_update(self, request, *args, **kwargs):
-        """partial_update method docstring"""
-        return super(SearchResultViewSet, self).partial_update(request, *args, **kwargs)
-
-    def destroy(self, request, *args, **kwargs):
-        """destroy method docstring"""
-        return super(SearchResultViewSet, self).destroy(request, *args, **kwargs)
