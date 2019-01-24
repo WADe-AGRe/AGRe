@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     'corsheaders',
 
     'drf_yasg',
+    'core',
     'schemaorgschemas',
     'django.contrib.sites',
     'phonenumber_field',
@@ -185,7 +186,7 @@ LOGGING = {
             'level': 'INFO',
             'propagate': False,
         },
-        'django.template': {
+        'django.templates': {
             'handlers': ['console_log'],
             'level': 'INFO',
             'propagate': False,

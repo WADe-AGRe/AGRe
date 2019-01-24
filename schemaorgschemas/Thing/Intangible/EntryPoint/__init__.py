@@ -72,7 +72,7 @@ class urlTemplateProp(SchemaProperty):
     """
     SchemaField for urlTemplate
     Usage: Include in SchemaObject SchemaFields as your_django_field = urlTemplateProp()  
-    schema.org description:An url template (RFC6570) that will be used to construct the target of the execution of the action.
+    schema.org description:An url templates (RFC6570) that will be used to construct the target of the execution of the action.
 
     prop_schema returns just the property without url#
     format_as is used by app templatetags based upon schema.org datatype

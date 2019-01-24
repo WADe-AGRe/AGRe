@@ -282,7 +282,7 @@ class SchemaNode(template.Node):
         if not obj:
             raise TemplateSyntaxError(
                 self.object_name +
-                ' not found in template context')
+                ' not found in templates context')
 
     @staticmethod
     def strip_annoying_text(text_to_strip, text_replace=''):
@@ -334,7 +334,7 @@ class SchemaNode(template.Node):
         new_conditions = []
         # iterate through list
         for condition in node.conditions_nodelists:
-            # condition is tuple index 0 points to a template literal object
+            # condition is tuple index 0 points to a templates literal object
             # index 1 points to a NodeList
             t_lit = condition[0]
             new_nodes = self.process_node_list(condition[1], context)
@@ -371,7 +371,7 @@ class SchemaNode(template.Node):
                 if hasattr(node_in_question, 'filter_expression'):
                     filter_exp = str(node_in_question.filter_expression)
                     filter_exp = filter_exp.replace(self.object_name + '.', '')
-                    # ensure ones with added template tags work properly
+                    # ensure ones with added templates tags work properly
                     if '|' in filter_exp:
                         filter_exp = filter_exp[:filter_exp.find('|')]
                     try:

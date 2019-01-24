@@ -56,7 +56,7 @@ class codeSampleTypeProp(SchemaProperty):
     """
     SchemaField for codeSampleType
     Usage: Include in SchemaObject SchemaFields as your_django_field = codeSampleTypeProp()  
-    schema.org description:Full (compile ready) solution, code snippet, inline code, scripts, template. Supersedes sampleType.
+    schema.org description:Full (compile ready) solution, code snippet, inline code, scripts, templates. Supersedes sampleType.
 
     prop_schema returns just the property without url#
     format_as is used by app templatetags based upon schema.org datatype
