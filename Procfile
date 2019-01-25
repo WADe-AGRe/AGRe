@@ -1,2 +1,2 @@
 release: python manage.py migrate
-web: gunicorn agre.wsgi
+web: gunicorn AGRe.wsgi
