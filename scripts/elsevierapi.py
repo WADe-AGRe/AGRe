@@ -3,7 +3,8 @@ import json
 from rdflib import Graph, Literal, Namespace
 from rdflib.namespace import FOAF, RDF
 
-subjects = ['networking']
+subjects = ['networking', 'data+structures', 'machine+learning', 'programming', 'artificial+intelligence', 'database', 'neural+networks', 'semantic+web', 'web+technologies', 'algorithms', 'c', 'data+mining', 'big+data', 'html', 'django', 'linear', 'svm', 'sparql']
+
 key = '&apiKey=7f59af901d2d86f78a1fd60c1bf9426a'
 url = 'https://api.elsevier.com/content/search/scopus?query=all({subject})' + key
 g = Graph()
@@ -61,6 +62,7 @@ def addToGraph(entry, tagName):
 
 def main():
     for s in subjects:
+        print(s)
         js = getJsonFromRequest(url.format(subject=s))
         results = js['search-results']['entry']
 
