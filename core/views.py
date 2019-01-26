@@ -5,7 +5,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.views.decorators.http import require_GET
-
+from AGRe.settings import GRAPHDB_APIKEY, GRAPHDB_SECRET
 
 def signup(request):
     if request.method == 'POST':
@@ -24,8 +24,8 @@ def signup(request):
 
 @require_GET
 def testGraphDb(request):
-    sparql = SPARQLWrapper("https://rdf.ontotext.com/4234582382/agre-graphdb2/repositories/agre")
-    # sparql.setCredentials(, "<your-cognitive-cloud-key-secret>")
+    sparql = SPARQLWrapper("https://rdf.ontotext.com/4234582382/agre-graphdb/repositories/agre")
+    sparql.setCredentials(GRAPHDB_APIKEY, GRAPHDB_SECRET)
     sparql.setQuery("""SELECT * WHERE { ?s ?p ?o } LIMIT 10""")
     sparql.setReturnFormat(JSON)
     response = sparql.query().convert()
