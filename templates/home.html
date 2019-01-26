@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block content %}
+    <!---- Search bar -->
+    <div class="container-fluid">
+        <br/>
+        <div class="row justify-content-start">
+            <div class="col-12 col-md-10 col-lg-7">
+                {% include 'search.html' %}
+            </div>
+            <div class="col-lg-5">
+                {% include 'peoplepanel.html' %}
+            </div>
+        </div>
+    </div>
+    Welcome to homepage
+{% endblock %}

@@ -1,0 +1,64 @@
+{% load static %}
+
+<link rel="stylesheet" href="{% static 'css/search.css' %}">
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.1.0/css/all.css"
+      integrity="sha384-lKuwvrZot6UHsBSfcMvOkWwlCMgc0TaWr+30HWe3a4ltaBwTZhyTEggF5tJv8tbt" crossorigin="anonymous">
+
+
+<form class="card card-lg">
+    <div class="card-body row no-gutters align-items-center">
+        <div class="col-auto">
+            <i class="fas fa-search h4 text-body"></i>
+        </div>
+        <!--end of col-->
+        <div class="col">
+            <input class="form-control form-control-lg form-control-borderless" type="search"
+                   placeholder="Search topics or keywords">
+        </div>
+        <!--end of col-->
+        <div class="col-auto">
+            <button class="btn btn-lg btn-success" type="submit">Find Resources</button>
+        </div>
+        <!--end of col-->
+    </div>
+</form>
+
+<!-- Search Results -->
+<ul class="list-group list-group-flush mt-4">
+    <li class="list-group-item">
+        <div class="media">
+            <img class="mr-3" src="{% static 'img/article.png' %}" alt="Generic placeholder image" width="110px">
+            <div class="media-body">
+                <h5 class="mt-0">Media heading</h5>
+                Cras sit amet nibh libero, in gravida nulla. Nulla vel metus scelerisque ante sollicitudin. Cras
+                purus odio, vestibulum in vulputate at, tempus viverra turpis. Fusce condimentum nunc ac nisi
+                vulputate fringilla. Donec lacinia congue felis in faucibus.
+            </div>
+        </div>
+    </li>
+    <li class="list-group-item">
+        <div class="media">
+            <img class="mr-3" src="{% static 'img/book.png' %}" alt="Generic placeholder image" width="110px">
+            <div class="media-body">
+                <h5 class="mt-0">Media heading</h5>
+                Cras sit amet nibh libero, in gravida nulla. Nulla vel metus scelerisque ante sollicitudin. Cras
+                purus odio, vestibulum in vulputate at, tempus viverra turpis. Fusce condimentum nunc ac nisi
+                vulputate fringilla. Donec lacinia congue felis in faucibus.
+            </div>
+        </div>
+    </li>
+    <li class="list-group-item">
+        <div class="media">
+            <img class="mr-3" src="{% static 'img/course.png' %}" alt="Generic placeholder image" width="110px">
+            <div class="media-body">
+                <h5 class="mt-0">Media heading</h5>
+                Cras sit amet nibh libero, in gravida nulla. Nulla vel metus scelerisque ante sollicitudin. Cras
+                purus odio, vestibulum in vulputate at, tempus viverra turpis. Fusce condimentum nunc ac nisi
+                vulputate fringilla. Donec lacinia congue felis in faucibus.
+            </div>
+        </div>
+    </li>
+</ul>
+
+
+<!--end of col-->
