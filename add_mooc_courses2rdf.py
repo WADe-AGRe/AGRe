@@ -3,14 +3,6 @@ from rdflib.namespace import RDF, SKOS, FOAF
 from rdflib.plugins.stores import sparqlstore
 import tqdm
 
-s_person = URIRef('http://schema.org/Person')
-s_action = URIRef('http://schema.org/Action')
-s_creative_work = URIRef('http://schema.org/CreativeWork')
-s_organization = URIRef('http://schema.org/Organization')
-s_book = URIRef('http://schema.org/Book')
-s_book_format_type = URIRef('http://schema.org/BookFormatType')
-s_course = URIRef('http://schema.org/Course')
-
 # Define the Stardog update store
 update_endpoint = 'http://localhost:5820/demo/update'
 update_store = sparqlstore.SPARQLUpdateStore()
@@ -31,6 +23,16 @@ default_graph = URIRef('http://example.org/default-graph')
 query_g = Graph(query_store, identifier=default_graph)
 query_g.store.setCredentials('admin', 'admin')
 
+s_person = URIRef('http://schema.org/Person')
+s_action = URIRef('http://schema.org/Action')
+s_creative_work = URIRef('http://schema.org/CreativeWork')
+s_organization = URIRef('http://schema.org/Organization')
+s_book = URIRef('http://schema.org/Book')
+s_book_format_type = URIRef('http://schema.org/BookFormatType')
+s_course = URIRef('http://schema.org/Course')
+s_course_instance = URIRef('http://schema.org/CourseInstance')
+
+
 print(SKOS.Concept)
 course = URIRef('https://www.coursera.org/learn/regression-modeling-practice')
 
@@ -38,19 +40,18 @@ course = URIRef('https://www.coursera.org/learn/regression-modeling-practice')
 
 # print(query_g.serialize(format='turtle').decode())
 
-{"link": "https://www.mooc-list.com/course/logic-and-paradoxes-unav", "title": "Logic and Paradoxes (UNAV)", "description": "", "tags": [{"tag": "Humanities", "url": "https://www.mooc-list.com/categories/humanities"}]}
-
 def add_course(g, course):
     uri = URIRef(course['link'])
 
     g.add((uri, RDF.type, s_course))
+    g.add((uri, RDF.type, s_course_instance))
 
     if 'title' in course:
         name = URIRef('http://schema.org/name')
         g.add((uri, name, Literal(course['title'])))
 
     if 'instructors' in course:
-        author = URIRef('http://schema.org/author')
+        author = URIRef('http://schema.org/instructor')
         for instructor in course['instructors']:
             g.add((uri, author, URIRef(instructor['url'])))
             
@@ -63,8 +64,9 @@ def add_course(g, course):
         g.add((uri, provider, URIRef(course['provider']['url'])))
 
     if 'university' in course:
-        university = URIRef('http://schema.org/location')
-        g.add((uri, university, URIRef(course['university']['url'])))
+        s_location = URIRef('http://schema.org/location')
+        for university in course['university']:
+            g.add((uri, s_location, URIRef(university['url'])))
 
     if 'country' in course:
         location = URIRef('http://schema.org/location')
@@ -87,12 +89,29 @@ def add_course(g, course):
         g.add((uri, certificate, URIRef(course['certificate']['url'])))
 
     if 'category' in course:
-        category = URIRef('http://schema.org/about')
-        g.add((uri, category, URIRef(course['category']['url'])))
+        s_category = URIRef('http://schema.org/about')
+        for category in course['category']:
+            g.add((uri, s_category, URIRef(category['url'])))
 
     if 'description' in course:
         description = URIRef('http://schema.org/description')
         g.add((uri, description, Literal(course['description'])))
+
+    if 'rating' in course:
+        rating = URIRef('http://schema.org/aggregateRating')
+        g.add((uri, rating, Literal(course['rating'])))
+
+def add_generic(g, l, type=None):
+    description = URIRef('http://schema.org/description')
+    name = URIRef('http://schema.org/name')
+    for thing in l:
+        uri = URIRef(thing['link'])
+        if type is not None:
+            g.add((uri, RDF.type, type))
+        if 'description' in thing:
+            g.add((uri, description, Literal(thing['description'])))
+        if 'name' in thing:
+            g.add((uri, name, Literal(thing['name'])))
 
 def add_enteties_from_courses(g, courses):
     instructors = dict()
@@ -138,3 +157,9 @@ if __name__ == "__main__":
     add_enteties_from_courses(update_g, courses)
     for course in tqdm.tqdm(courses):
         add_course(update_g, course)
+
+    files = ['data/mooc_list_instructors.json', 'data/mooc_list_universities.json', 'data/mooc_list_providers.json']
+    for file in files:
+        with open(file, 'r') as f:
+            l = json.load(f)
+        add_generic(update_g, l)
