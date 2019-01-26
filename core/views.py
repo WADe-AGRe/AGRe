@@ -1,9 +1,10 @@
-from django.shortcuts import render
-
 # Create your views here.
+from SPARQLWrapper import SPARQLWrapper, JSON
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.forms import UserCreationForm
+from django.http import HttpResponse
 from django.shortcuts import render, redirect
+from django.views.decorators.http import require_GET
 
 
 def signup(request):
@@ -19,3 +20,19 @@ def signup(request):
     else:
         form = UserCreationForm()
     return render(request, 'signup.html', {'form': form})
+
+
+@require_GET
+def testGraphDb(request):
+    sparql = SPARQLWrapper("https://rdf.ontotext.com/4234582382/agre-graphdb2/repositories/agre")
+    # sparql.setCredentials(, "<your-cognitive-cloud-key-secret>")
+    sparql.setQuery("""SELECT * WHERE { ?s ?p ?o } LIMIT 10""")
+    sparql.setReturnFormat(JSON)
+    response = sparql.query().convert()
+    result = response["results"]["bindings"]
+    html = '<html><body><ul>'
+    print(result)
+    for each in result:
+        html += '<li>' + str(each) + '</li>'
+    html += '</ul></body></html>'
+    return HttpResponse(html)
