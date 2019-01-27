@@ -1,0 +1,33 @@
+{# Load the tag library #}
+{% load bootstrap4 %}
+
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    {# Load CSS and JavaScript #}
+    {% bootstrap_css %}
+    {% bootstrap_javascript jquery='full' %}
+
+    <title>AGRe</title>
+</head>
+<body>
+<header>
+{% include 'navbar.html' %}
+</header>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            {% block content %}
+            {% endblock %}
+        </div>
+    </div>
+</div>
+</body>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"
+        integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut"
+        crossorigin="anonymous"></script>
+
+</html>
