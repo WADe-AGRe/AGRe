@@ -1,11 +1,16 @@
 # Create your views here.
+import json
+import logging
+
 from SPARQLWrapper import SPARQLWrapper, JSON
 from django.contrib.auth import login, authenticate
+from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.views.decorators.http import require_GET
 
 from AGRe.settings import GRAPHDB_APIKEY, GRAPHDB_SECRET
+from core.models import Interest
 from .forms import SignUpForm
 
 
@@ -47,3 +52,32 @@ def testGraphDb(request):
         html += '<li>' + str(each) + '</li>'
     html += '</ul></body></html>'
     return HttpResponse(html)
+
+
+@login_required
+def edit_interests(request):
+    logging.basicConfig(filename='mylog.log', level=logging.DEBUG)
+    if request.method == 'GET':
+        user = request.user
+        interests = Interest.objects.all()
+        user_interests = user.profile.interests.all()
+
+        for i in user_interests:
+            [o for o in interests if o.id == i.id][0].selected = True
+
+        return render(request, 'interests.html', {'interests': interests})
+
+    elif request.method == 'POST':
+        user = request.user
+        data = json.loads(request.body).get('ids', [])
+
+        user.profile.interests.clear()
+
+        for id in data:
+            try:
+                user.profile.interests.add(Interest.objects.get(pk=id))
+            except Exception as ex:
+                pass
+
+        user.save()
+        return HttpResponse(status=200)

@@ -50,3 +50,7 @@ class Review(models.Model):
 
 class Interest(models.Model):
     name = models.CharField(max_length=30)
+    selected = False
+
+    def get_clean_name(self):
+        return ' '.join(self.name.split('+')).title()
