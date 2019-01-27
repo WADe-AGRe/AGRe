@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+{% for res in search_results %}
+    {% if res.type == "course" %}
+        <div class="media" vocab="http://schema.org/">
+            <img class="mr-3" src="/static/img/course.png" alt="Generic placeholder image" width="110px">
+            <div class="media-body">
+                <main typeof="Course" >
+                  <h4 property="name" lass="mt-0">{{res.name}}</h4>
+                  {% if res.university %}
+                    <h5>
+                        {% for uni in res.university %}
+                            {% if forloop.counter > 1 %}
+                                ,
+                            {% endif %}
+                            <span property="provider" typeof="EducationalOrganization"> <span property="name">{{uni}}</span></span>
+                        {% endfor %}
+                    </h5>
+                  {% endif %}
+
+                   <div rel="hasCourseInstance" typeof="CourseInstance">
+                    <meta property="courseMode" content="MOOC" />
+                    <meta property="courseMode" content="online" />
+                    <span rel="offers" typeOf="Offer">
+                        {% if res.provider %}
+                            <h5 property="offeredBy" typeof="Organization">
+                                <span property="name">{{res.provider}}</span>
+                            </h5>
+                          {% endif %}
+                    </span>
+                       <h5>
+                           Thaught by:
+                        {% for instruct in res.instructors %}
+                            {% if forloop.counter > 1 %}
+                                ,
+                            {% endif %}
+                            <span property="instructor" typeof="person">
+                                <span  property="name">{{instruct.name}}</span>
+                            </span>
+                        {% endfor %}
+                       </h5>
+                  </div>
+
+
+                  {% if res.language %}
+                    <h6 property="inLanguage" typeof="CourseInstance">
+                        <span property="name">{{res.language}}</span>
+                    </h6>
+                  {% endif %}
+
+                  {% if res.country %}
+                    <h6 property="location" typeof="Country">
+                        <span property="name">{{res.country}}</span>
+                    </h6>
+                  {% endif %}
+
+                  {% if res.description %}
+                    <p property="description">
+                       {{res.description}}
+                    </p>
+                  {% endif %}
+
+                  {% if res.rating %}
+                    <div>
+                        {% for i in "xxxxxxxxxx" %}
+                            {% if res.rating > (forloop.counter - 0.5)%}
+                                <span class="fa fa-star checked"></span>
+                            {% else %}
+                                <span class="fa fa-star"></span>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    <p> It has a rating of <span property="rating">res.rating </span></p>
+                  {% endif %}
+
+                  {% if res.categories %}
+                    <div>
+                        <p>Categories:</p>
+                        <ul>
+                          {% for cat in res.categories %}
+                          <li property="about">{{cat}}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                  {% endif %}
+
+                </main>
+            </div>
+        </div>
+    {% elif res.type == "article" %}
+        <div class="card" vocab="http://schema.org/">
+        <main typeof="Course" >
+          <h4 property="name">{{res.name}}</h4>
+          <p><small>Article</small></p>
+
+        </main>
+        </div>
+    {% elif res.type == "book" %}
+        <div class="card" vocab="http://schema.org/">
+        <main typeof="Course" >
+          <h4 property="name">{{res.name}}</h4>
+          <p><small>Book</small></p>
+
+        </main>
+        </div>
+    {% elif res.type == "person" %}
+        <div class="card" vocab="http://schema.org/">
+        <main typeof="Person" >
+          <h4 property="name">{{res.name}}</h4>
+          <p><small>Book</small></p>
+
+        </main>
+        </div>
+    {% else %}
+        {{res}}
+    {% endif %}
+{% empty %}
+    <h4>Sorry, no results were found.</h4>
+{% endfor %}
+
+
+{% endblock %}
