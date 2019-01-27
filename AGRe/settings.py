@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'core',
     'bootstrap4',
+    'phonenumber_field',
 ]
 
 MIDDLEWARE = [
@@ -114,6 +115,11 @@ USE_L10N = True
 
 USE_TZ = True
 
+# Configure Django App for Heroku.
+import django_heroku
+
+django_heroku.settings(locals())
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
@@ -124,7 +130,4 @@ STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'),)
 GRAPHDB_SECRET = 'od4btraghp4hln7'
 GRAPHDB_APIKEY = 's4c4gqkrdf06'
 
-# Configure Django App for Heroku.
-import django_heroku
-
-django_heroku.settings(locals())
+LOGIN_REDIRECT_URL = '/'
