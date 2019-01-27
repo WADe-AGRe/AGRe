@@ -23,6 +23,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     url(r'^core/', include('core.urls')),
 
-    url(r'^$', TemplateView.as_view(template_name='home.html'), name='home')
-
+    url(r'^$', TemplateView.as_view(template_name='home.html'), name='home'),
+    url(r'^item$', TemplateView.as_view(template_name='itempage.html'), name='item')
 ]
