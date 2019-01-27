@@ -63,9 +63,9 @@ def add_course(g, course):
         provider = URIRef('http://schema.org/provider')
         g.add((uri, provider, URIRef(course['provider']['url'])))
 
-    if 'university' in course:
+    if 'universities' in course:
         s_location = URIRef('http://schema.org/location')
-        for university in course['university']:
+        for university in course['universities']:
             g.add((uri, s_location, URIRef(university['url'])))
 
     if 'country' in course:
@@ -88,9 +88,9 @@ def add_course(g, course):
         certificate = URIRef('http://schema.org/educationalCredentialAwarded')
         g.add((uri, certificate, URIRef(course['certificate']['url'])))
 
-    if 'category' in course:
+    if 'categories' in course:
         s_category = URIRef('http://schema.org/about')
-        for category in course['category']:
+        for category in course['categories']:
             g.add((uri, s_category, URIRef(category['url'])))
 
     if 'description' in course:
@@ -104,7 +104,7 @@ def add_course(g, course):
 def add_generic(g, l, type=None):
     description = URIRef('http://schema.org/description')
     name = URIRef('http://schema.org/name')
-    for thing in l:
+    for thing in tqdm.tqdm(l):
         uri = URIRef(thing['link'])
         if type is not None:
             g.add((uri, RDF.type, type))
@@ -120,31 +120,35 @@ def add_enteties_from_courses(g, courses):
     worksFor = URIRef('http://schema.org/worksFor')
 
     for course in tqdm.tqdm(courses):
-        if 'university' in course:
-            uni_url = course['university']['url']
-            uni_ref = URIRef(uni_url)
-            if uni_url not in universities:
-                g.add((uni_ref, RDF.type, s_organization))
-                universities.add(uni_url)
+        if 'universities' in course:
+            for uni in course['universities']:
+                uni_url = uni['url']
+                uni_ref = URIRef(uni_url)
+                if uni_url not in universities:
+                    g.add((uni_ref, RDF.type, s_organization))
+                    universities.add(uni_url)
 
         if 'provider' in course:
             provider_url = course['provider']['url']
             provider_ref = URIRef(provider_url)
-            if uni_url not in universities:
+            if provider_url not in universities:
                 g.add((provider_ref, RDF.type, s_organization))
                 providers.add(provider_url)
 
         if 'instructors' in course:
             for instructor in course['instructors']:
+                instructor_ref = URIRef(instructor['url'])
                 if instructor['url'] not in instructors:
-                    instructor_ref = URIRef(instructor['url'])
                     g.add(( instructor_ref, RDF.type, s_person))
                     instructors[instructor['url']] = set()
 
-                if 'university' in course:
-                    if uni_url not in instructors[instructor['url']]:
-                        g.add((instructor_ref, worksFor, uni_ref))
-                        instructors[instructor['url']].add(uni_url)
+                if 'universities' in course:
+                    for uni in course['universities']:
+                        uni_url = uni['url']
+                        uni_ref = URIRef(uni_url)
+                        if uni_url not in instructors[instructor['url']]:
+                            g.add((instructor_ref, worksFor, uni_ref))
+                            instructors[instructor['url']].add(uni_url)
 
 
 
@@ -154,6 +158,8 @@ if __name__ == "__main__":
     with open('data/mooc_list_courses_detailed.json', 'r') as f:
         courses = json.load(f)
 
+    courses = courses[:100]
+
     add_enteties_from_courses(update_g, courses)
     for course in tqdm.tqdm(courses):
         add_course(update_g, course)
@@ -162,4 +168,4 @@ if __name__ == "__main__":
     for file in files:
         with open(file, 'r') as f:
             l = json.load(f)
-        add_generic(update_g, l)
+        add_generic(update_g, l[:100])
