@@ -37,6 +37,9 @@ class Resource(models.Model):
     uri = models.CharField(max_length=100)
     type = models.CharField(max_length=5, choices=RESOURCE_TYPES)
 
+    def rating(self):
+        return self.reviews.all().aggregate(models.Avg('rating'))
+
 
 class Review(models.Model):
     reviewer = models.ForeignKey(User, related_name='reviews', on_delete=models.CASCADE)

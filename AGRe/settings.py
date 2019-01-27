@@ -124,3 +124,5 @@ STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'),)
 # GraphDB Credentials
 GRAPHDB_SECRET = 'od4btraghp4hln7'
 GRAPHDB_APIKEY = 's4c4gqkrdf06'
+
+LOGIN_REDIRECT_URL = '/'
