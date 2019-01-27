@@ -64,16 +64,20 @@
                   {% endif %}
 
                   {% if res.rating %}
-                    <div>
+                    <div class="review-block-rate">
                         {% for i in "xxxxxxxxxx" %}
-                            {% if res.rating > (forloop.counter - 0.5)%}
-                                <span class="fa fa-star checked"></span>
+                            {% if res.rating >= forloop.counter %}
+                                <button type="button" class="btn btn-warning btn-xs" aria-label="Left Align">
+                                    <span class="glyphicon glyphicon-star" aria-hidden="true"></span>
+                                </button>
                             {% else %}
-                                <span class="fa fa-star"></span>
+                                <button type="button" class="btn btn-default btn-grey btn-xs" aria-label="Left Align">
+                                    <span class="glyphicon glyphicon-star" aria-hidden="true"></span>
+                                </button>
                             {% endif %}
                         {% endfor %}
                     </div>
-                    <p> It has a rating of <span property="rating">res.rating </span></p>
+                    <p> It has a rating of <span property="rating">{{res.rating}} </span></p>
                   {% endif %}
 
                   {% if res.categories %}
