@@ -29,12 +29,15 @@ class Course(models.Model):
 
 
 class Resource(models.Model):
+    BOOK = 'bk'
+    ARTICLE = 'art'
+    COURSE = 'crs'
     RESOURCE_TYPES = (
-        ('bk', 'Book'),
-        ('art', 'Article'),
-        ('crs', 'Course'),
+        (BOOK, 'Book'),
+        (ARTICLE, 'Article'),
+        (COURSE, 'Course'),
     )
-    uri = models.CharField(max_length=100)
+    uri = models.CharField(max_length=100, unique=True)
     type = models.CharField(max_length=5, choices=RESOURCE_TYPES)
 
     def rating(self):

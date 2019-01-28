@@ -10,8 +10,10 @@ from django.shortcuts import render, redirect
 from django.views.decorators.http import require_GET
 
 from AGRe.settings import GRAPHDB_APIKEY, GRAPHDB_SECRET
-from core.models import Interest
-from .forms import SignUpForm
+from core.models import Interest, Resource
+from core.forms import SignUpForm
+from core.queries import RESOURCE_DETAILS_QUERY, sparql
+from core.ontology import ArticleONT, AffiliationONT
 
 
 def signup(request):
@@ -81,3 +83,25 @@ def edit_interests(request):
 
         user.save()
         return HttpResponse(status=200)
+
+
+@require_GET()
+def view_resource(request, id):
+    logging.basicConfig(filename='mylog.log', level=logging.DEBUG)
+    try:
+        resource = Resource.objects.get(id=id)
+    except Resource.DoesNotExist:
+        logging.debug('Not found' + id)
+        return HttpResponse(status=404)
+
+    resource_details = {}
+
+    sparql.setQuery(RESOURCE_DETAILS_QUERY.format(uri=resource.uri))
+
+    ret = sparql.queryAndConvert()
+    print(ret.variables)
+    for binding in ret.bindings:
+        if binding['prop'].value == ArticleONT.NAME.toPython():
+            resource_details['name'] = binding['subj'].value
+
+    return render(request, 'itempage.html', {'data': resource_details})
