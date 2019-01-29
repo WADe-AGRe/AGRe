@@ -1,6 +1,5 @@
 from rdflib import Namespace
 
-USER_NS = Namespace("http://agre.org/user/")
 SCHEMA_NS = Namespace("https://schema.org/")
 
 LIKES_URI = SCHEMA_NS.likes
@@ -8,8 +7,9 @@ DISLIKES_URI = SCHEMA_NS.dislikes
 
 ONTOLOGY_BASE_URL = "https://agre.herokuapp.com/ontology/"
 
+USER_NS = Namespace(ONTOLOGY_BASE_URL + "user/")
 BOOK_NS = Namespace(ONTOLOGY_BASE_URL + "book/")
-AUTHOR_NS = Namespace(ONTOLOGY_BASE_URL + "/author/")
+AUTHOR_NS = Namespace(ONTOLOGY_BASE_URL + "author/")
 TAGS_NS = Namespace(ONTOLOGY_BASE_URL + "tags/")
 CATEGORIES_NS = Namespace(ONTOLOGY_BASE_URL + "categories/")
 PUBLISHER_NS = Namespace(ONTOLOGY_BASE_URL + "publisher/")
