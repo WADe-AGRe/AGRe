@@ -1,4 +1,9 @@
 from rdflib.namespace import FOAF
+from rdflib import Namespace
+
+USER_NS = Namespace("http://agre.org/user/")
+LIKES_URI = FOAF.likes
+DISLIKES_URI = FOAF.dislikes
 
 
 class BaseONT:

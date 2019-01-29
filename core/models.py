@@ -1,4 +1,3 @@
-
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
@@ -46,7 +45,6 @@ class Resource(models.Model):
     def rating(self):
         val = self.reviews.all().aggregate(avg=models.Avg('rating'))['avg']
         return 0 if val is None else val
-
 
 
 class Review(models.Model):
