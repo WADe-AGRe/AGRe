@@ -3,97 +3,96 @@
 {% block content %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
+<form class="card card-lg">
+    <div class="card-body row no-gutters align-items-center" action="/search/" method="get">
+        <div class="col-auto">
+            <i class="fas fa-search h4 text-body"></i>
+        </div>
+        <!--end of col-->
+        <div class="col">
+            <input name="q" class="form-control form-control-lg form-control-borderless" type="search" placeholder="Search topics or keywords">
+        </div>
+        <!--end of col-->
+        <div class="col-auto">
+            <button class="btn btn-lg btn-success" type="submit">Find Resources</button>
+        </div>
+        <!--end of col-->
+    </div>
+</form>
+
+<div class="col-12 col-md-10 col-lg-8">
+<div class="row">
 {% for res in search_results %}
     {% if res.type == "course" %}
-        <div class="media" vocab="http://schema.org/">
-            <img class="mr-3" src="/static/img/course.png" alt="Generic placeholder image" width="110px">
-            <div class="media-body">
-                <main typeof="Course" >
-                  <h4 property="name" lass="mt-0">{{res.name}}</h4>
-                  {% if res.university %}
-                    <h5>
-                        {% for uni in res.university %}
-                            {% if forloop.counter > 1 %}
-                                ,
-                            {% endif %}
-                            <span property="provider" typeof="EducationalOrganization"> <span property="name">{{uni}}</span></span>
-                        {% endfor %}
-                    </h5>
+    <div class="col-lg-6" vocab="http://schema.org/">
+        <div class="card border-success mx-1">
+            <main typeof="Course" >
+                <div property="name" class="card-header">{{res.name}}</div>
+                <div class="card-body text-success">
+                    <div class="row">
+                        <img class="col-md-3" src="/static/img/course.png" style="height:50%">
+                     {% if res.description %}
+                    <p property="description" class="card-text col-md-9">{{res.description|truncatechars:85}}...</p>
                   {% endif %}
-
-                   <div rel="hasCourseInstance" typeof="CourseInstance">
-                    <meta property="courseMode" content="MOOC" />
-                    <meta property="courseMode" content="online" />
-                    <span rel="offers" typeOf="Offer">
-                        {% if res.provider %}
-                            <h5 property="offeredBy" typeof="Organization">
-                                <span property="name">{{res.provider}}</span>
-                            </h5>
-                          {% endif %}
-                    </span>
-                       <h5>
-                           Thaught by:
-                        {% for instruct in res.instructors %}
-                            {% if forloop.counter > 1 %}
-                                ,
-                            {% endif %}
-                            <span property="instructor" typeof="person">
-                                <span  property="name">{{instruct.name}}</span>
-                            </span>
-                        {% endfor %}
-                       </h5>
-                  </div>
-
-
-                  {% if res.language %}
-                    <h6 property="inLanguage" typeof="CourseInstance">
-                        <span property="name">{{res.language}}</span>
-                    </h6>
-                  {% endif %}
-
-                  {% if res.country %}
-                    <h6 property="location" typeof="Country">
-                        <span property="name">{{res.country}}</span>
-                    </h6>
-                  {% endif %}
-
-                  {% if res.description %}
-                    <p property="description">
-                       {{res.description}}
-                    </p>
-                  {% endif %}
-
-                  {% if res.rating %}
-                    <div class="review-block-rate">
-                        {% for i in "xxxxxxxxxx" %}
-                            {% if res.rating >= forloop.counter %}
-                                <button type="button" class="btn btn-warning btn-xs" aria-label="Left Align">
-                                    <span class="glyphicon glyphicon-star" aria-hidden="true"></span>
-                                </button>
-                            {% else %}
-                                <button type="button" class="btn btn-default btn-grey btn-xs" aria-label="Left Align">
-                                    <span class="glyphicon glyphicon-star" aria-hidden="true"></span>
-                                </button>
-                            {% endif %}
-                        {% endfor %}
                     </div>
-                    <p> It has a rating of <span property="rating">{{res.rating}} </span></p>
-                  {% endif %}
-
-                  {% if res.categories %}
+                    <br>
                     <div>
-                        <p>Categories:</p>
-                        <ul>
-                          {% for cat in res.categories %}
-                          <li property="about">{{cat}}</li>
+                        {% if res.university %}
+                            <div>
+                                {% for uni in res.university %}
+                                    {% if forloop.counter > 1 %}
+                                        ,
+                                    {% endif %}
+                                    <span property="provider" typeof="EducationalOrganization"> <span property="name">{{uni}}</span></span>
+                                {% endfor %}
+                            </div>
+                          {% endif %}
+                       <div rel="hasCourseInstance" typeof="CourseInstance">
+                        <meta property="courseMode" content="MOOC" />
+                        <meta property="courseMode" content="online" />
+                           <div>
+                               Thaught by:
+                            {% for instruct in res.instructors %}
+                                {% if forloop.counter > 1 %}
+                                    ,
+                                {% endif %}
+                                <span property="instructor" typeof="person">
+                                    <span  property="name">{{instruct.name}}</span>
+                                </span>
                             {% endfor %}
-                        </ul>
-                    </div>
-                  {% endif %}
+                           </div>
 
-                </main>
-            </div>
+                           <span rel="offers" typeOf="Offer">
+                            {% if res.provider %}
+                                <div property="offeredBy" typeof="Organization">
+                                    <span property="name">{{res.provider}}</span>
+                                </div>
+                              {% endif %}
+                        </span>
+                      </div>
+
+                        <div><b>Course's rank:</b>
+                            <div class="review-block-rate">
+                                {% for i in "xxxxx" %}
+                                    {% if res.rating >= forloop.counter %}
+                                        <span><i class="fa fa-star" aria-hidden="true"></i></span>
+                                    {% elif res.rating >= forloop.counter|add:"-0.5" %}
+                                        <span><i class="fa fa-star-half-empty" aria-hidden="true"></i></span>
+                                    {% else %}
+                                        <span><i class="fa fa-star-empty" aria-hidden="true"></i></span>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div><a href="{{res.link}}">Course link</a></div>
+                        {% if res.reviews %}
+                            <div><b>Reviews:</b> <i>{{res.reviews[0]|truncatechars:50}} </i></div>
+                        {% endif %}
+                    </div>
+                </div>
+            </main>
         </div>
+    </div>
     {% elif res.type == "article" %}
         <div class="card" vocab="http://schema.org/">
         <main typeof="Course" >
@@ -124,6 +123,7 @@
 {% empty %}
     <h4>Sorry, no results were found.</h4>
 {% endfor %}
-
+</div>
 
 {% endblock %}
+</div>

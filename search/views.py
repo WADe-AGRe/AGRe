@@ -10,9 +10,21 @@ class NameForm(forms.Form):
 
 # Create your views here.
 def main(request):
-    search_results = rdf_utils.find_courses('data')
-    return render(request, 'search/index.html', {'search_results':search_results})
+    context = dict()
+    if 'q' in request.GET:
+        context['q'] = request.GET['q']
+        search_results = rdf_utils.find_courses(request.GET['q'])
+    else:
+        search_results = rdf_utils.find_courses()
+    context['search_results'] = search_results
+    return render(request, 'search/index.html', context)
 
 def course(request):
-    search_results = rdf_utils.find_courses()
-    return render(request, 'search/index.html', {'search_results':search_results})
+    context = dict()
+    if 'q' in request.GET:
+        context['q'] = request.GET['q']
+        search_results = rdf_utils.find_courses(request.GET['q'])
+    else:
+        search_results = rdf_utils.find_courses()
+    context['search_results'] = search_results
+    return render(request, 'search/index.html', context)

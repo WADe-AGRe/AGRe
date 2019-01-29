@@ -2,26 +2,31 @@ from rdflib import Graph, Literal, URIRef
 from rdflib.namespace import RDF, SKOS, FOAF
 from rdflib.plugins.stores import sparqlstore
 
+api_key   = 's4reml553j6d'
+api_secret = 'ngpcvnoi4p9l5hc'
+
+# Identify a named graph where we will be adding our instances.
+course_graph = URIRef('http://agre.com/courses')
+book_graph = URIRef('http://agre.com/books')
+article_graph = URIRef('http://agre.com/articles')
+
 # Define the Stardog update store
-update_endpoint = 'http://localhost:5820/demo/update'
+update_endpoint = 'https://rdf.ontotext.com/4234582382/agre-graphdb/repositories/agre/statements'
 update_store = sparqlstore.SPARQLUpdateStore()
 update_store.open((update_endpoint, update_endpoint))
 
-# Identify a named graph where we will be adding our instances.
-default_graph = URIRef('http://example.org/default-graph')
-update_g = Graph(update_store, identifier=default_graph)
-update_g.store.setCredentials('admin', 'admin')
-
-# Define the Stardog query store
-query_endpoint = 'http://localhost:5820/demo/query'
+query_endpoint = 'https://rdf.ontotext.com/4234582382/agre-graphdb/repositories/agre'
 query_store = sparqlstore.SPARQLUpdateStore()
 query_store.open((query_endpoint, query_endpoint))
 
-# Identify a named graph where we will be adding our instances.
-default_graph = URIRef('http://example.org/default-graph')
-query_g = Graph(query_store, identifier=default_graph)
-query_g.store.setCredentials('admin', 'admin')
+course_g = Graph(query_store, identifier=course_graph)
+course_g.store.setCredentials(api_key, api_secret)
 
+book_g = Graph(query_store, identifier=course_graph)
+book_g.store.setCredentials(api_key, api_secret)
+
+article_g = Graph(query_store, identifier=course_graph)
+article_g.store.setCredentials(api_key, api_secret)
 
 s_person = URIRef('http://schema.org/Person')
 s_action = URIRef('http://schema.org/Action')
@@ -40,26 +45,46 @@ s_description = URIRef('http://schema.org/description')
 s_rating = URIRef('http://schema.org/aggregateRating')
 s_inLanguage = URIRef('http://schema.org/inLanguage')
 
-class Instructor:
-    def __init__(self, name=''):
+class Generic:
+    def __init__(self, type='', link='', name='', description=''):
+        self.type = type
+        self.link = link
         self.name = name
+        self.description = description
 
 class Course:
-    def __init__(self, name='', university=None, provider='', instructors=None, language='',
-                 country='', description='', rating=0, categories=None):
+    def __init__(self, link='', name='', university=None, provider='', instructors=None, language='',
+                 country='', description='', rating=0, categories=None, reviews=None):
         self.type = "course"
+        self.link = link
         self.name = name
+        self.description = description
         self.university = university
         self.provider = provider
         self.instructors = instructors
         self.language = language
         self.country = country
-        self.description = description
         self.rating = rating
         self.categories = categories
+        self.reviews = reviews
+
+class Book:
+    def __init__(self, link='', name='',  provider='', authors=None, description='',
+                 rating=0, categories=None, reviews=None, publisher='', subject=''):
+        self.type = "course"
+        self.link = link
+        self.name = name
+        self.description = description
+        self.provider = provider
+        self.authors = authors
+        self.rating = rating
+        self.categories = categories
+        self.reviews = reviews
+        self.publisher = publisher
+        self.subject = subject
 
 def find_courses(search_terms=None, limit=100, offset=0):
-    global query_g
+    global course_g
 
     query_s = '''SELECT DISTINCT ?course ?name ?instructor ?uni ?location ?provider ?description ?rating ?category ?language
         WHERE {
@@ -82,8 +107,6 @@ def find_courses(search_terms=None, limit=100, offset=0):
         }
         '''
 
-
-
     if search_terms:
         query_s += 'filter contains(lcase(str(?name)),"%s")\n' % (search_terms)
 
@@ -93,10 +116,9 @@ def find_courses(search_terms=None, limit=100, offset=0):
     if offset > 0:
         query_s += 'OFFSET  %d\n' % (offset)
 
-    qres = query_g.query(query_s, initBindings={'c': s_course, 'n': s_name, 'i': s_instructor,
+    qres = course_g.query(query_s, initBindings={'c': s_course, 'n': s_name, 'i': s_instructor,
                                             'prov': s_provider, 'loc': s_location, 'offerBy':s_offeredBy,
                                             'desc':s_description, 'rate':s_rating, 'cat':s_category, 'inLang':s_inLanguage}, )
-
 
     course2data = dict()
     for (course ,name ,instructor ,uni ,location ,provider ,description ,rating ,category ,language) in qres:
@@ -122,12 +144,83 @@ def find_courses(search_terms=None, limit=100, offset=0):
     res_courses = []
     for course_url in course2data:
         course = course2data[course_url]
-        instructors = [Instructor(name) for name in course['instructors']]
-        c = Course(name=course['name'], instructors=instructors, university=course['unis'], categories=course['categories'],
+        instructors = [Generic(name=name) for name in course['instructors']]
+        c = Course(link=course_url, name=course['name'], instructors=instructors, university=course['unis'], categories=course['categories'],
                    rating=course['rating'], language=course['language'], description=course['description'], provider=course['provider'],
                    country=course['location'])
         res_courses.append(c)
     return res_courses
 
+def find_books(search_terms=None, limit=100, offset=0):
+    global book_g
+
+    query_s = '''SELECT DISTINCT ?book ?name ?description ?link ?subject ?publisher
+            WHERE {
+             ?book rdf:type ?b . 
+             ?book ?n ?name . 
+             ?book ?desc ?description . 
+             ?book ?url ?link . 
+             ?book ?pub ?publisher . 
+             ?book ?sub ?subject_url . 
+             ?subject_url ?n subject
+            '''
+
+    if search_terms:
+        query_s += 'filter contains(lcase(str(?name)),"%s")\n' % (search_terms)
+
+    query_s += '}\nORDER BY ASC(?name)\n'
+
+    query_s += 'LIMIT %d\n' % (limit)
+    if offset > 0:
+        query_s += 'OFFSET  %d\n' % (offset)
+
+    qres = book_g.query(query_s, initBindings={'b': FOAF.Book, 'n': FOAF.name, 'url': FOAF.hasURL,
+                                     'sub': FOAF.hasSubject, 'pub': FOAF.hasPublisher,'desc': FOAF.hasDescription,}, )
+
+    book2data = dict()
+    for (book, name, description, link, subject, publisher) in qres:
+        if book not in book2data:
+            book2data[book] = {
+                'name': str(name),
+                'link': str(link),
+                'subject': str(subject),
+                'publisher': str(publisher),
+                'authors': set(),
+                'description': str(description),
+                'categories': set(),
+            }
+
+    book_set = list(book2data.keys())
+
+    query_s = '''SELECT DISTINCT ?book ?cat
+            WHERE {
+             ?book rdf:type foaf:Book . 
+             ?book foaf:hasCategory ?cat . 
+             filter(?book IN ?set)
+             }
+            '''
+
+    cat_qres = book_g.query(query_s, initBindings={'set':book_set})
+
+    query_s = '''SELECT DISTINCT ?book ?author
+            WHERE {
+             ?book rdf:type foaf:Book . 
+             ?book foaf:hasAuthor ?author . 
+             filter(?book IN ?set)
+             }
+            '''
+
+    author_qres = book_g.query(query_s, initBindings={'set':book_set})
+
+
+    res_books = []
+    for book_url in book2data:
+        book = book2data[book_url]
+        b = Book(link=book['link'], name=book['name'], authors=book['authors'],
+                   categories=book['categories'],
+                   rating=book['rating'], description=book['description'])
+        res_books.append(b)
+    return res_books
+
 if __name__ == "__main__":
-    print(find_courses(search_terms='data'))
+    print(find_courses(search_terms=None))
