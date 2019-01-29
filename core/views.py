@@ -10,25 +10,19 @@ from django.shortcuts import render, redirect
 from django.views.decorators.http import require_GET
 
 from AGRe.settings import GRAPHDB_APIKEY, GRAPHDB_SECRET
-from core.models import Interest, Resource, Review
-from core.forms import SignUpForm
+from core.models import Interest, Resource, Review, Profile
+from core.forms import SignUpForm, ReviewForm
 from core.queries import RESOURCE_DETAILS_QUERY, sparql
 from core.ontology import ArticleONT, AffiliationONT
 from django.views import View
 
 
 def signup(request):
-    import logging
-    logging.basicConfig(filename='mylog.log', level=logging.DEBUG)
-
     if request.method == 'POST':
         form = SignUpForm(request.POST)
         if form.is_valid():
-            logging.debug('form=%s', form.cleaned_data)
             user = form.save()
-            user.refresh_from_db()  # load the profile instance created by the signal
-            print(form.cleaned_data)
-            logging.debug('form=%s', form.cleaned_data)
+            user.refresh_from_db()
             user.profile.is_professor = form.cleaned_data.get('is_professor')
             user.profile.is_student = form.cleaned_data.get('is_student')
             user.save()
@@ -119,6 +113,7 @@ class ResourceView(View):
         resource_details['stars'] = int(rating) * '*'
         resource_details['empty_stars'] = (5 - int(rating)) * '*'
         resource_details['half_star'] = True if rating - int(rating) >= 0.25 else False
+        resource_details['type'] = resource.get_type_display().lower()
         return resource_details
 
     def get_resource_reviews(self, resource):
@@ -137,3 +132,25 @@ class ResourceView(View):
         resource_reviews = self.get_resource_reviews(resource)
 
         return render(request, 'itempage.html', {'resource': resource_details, 'reviews': resource_reviews})
+
+@login_required
+@require_POST
+def send_review(request):
+    logging.basicConfig(filename='mylog.log', level=logging.DEBUG)
+
+    form = ReviewForm(request.POST)
+
+    if form.is_valid():
+        review = Review.objects.filter(item=form.cleaned_data.get('item'), reviewer=request.user.id)
+
+        if review is None or len(review) is 0:
+            review = form.save(commit=False)
+            review.reviewer = request.user
+            review.item = form.cleaned_data.get('item')
+            review.save()
+        else:
+            review.update(comment=form.cleaned_data.get('comment'), rating=form.cleaned_data.get('rating'))
+
+        return HttpResponseRedirect('/resource?id={0}'.format(form.cleaned_data.get('item').id))
+    else:
+        return render(request, '/resources', {'form': form})

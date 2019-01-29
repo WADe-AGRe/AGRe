@@ -7,5 +7,5 @@ urlpatterns = [
     url(r'^accounts/interests/$', core_views.edit_interests, name='interests'),
 
     url(r'^resource/$', core_views.ResourceView.as_view(), name='resource_view'),
-
+    url(r'^review/$', core_views.send_review, name='review'),
 ]

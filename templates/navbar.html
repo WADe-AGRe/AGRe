@@ -17,7 +17,7 @@
         <ul class="navbar-nav ml-auto mr-4">
             {% if user.is_authenticated %}
                 <li class="nav-item">
-                    <a class="nav-link" href="#">Welcome <b>{{ user.get_username }}</b></a>
+                    <a class="nav-link" href="#">Welcome <b>{{ user.get_username.title }}</b></a>
                 </li>
 
                 <li class="nav-item dropdown">

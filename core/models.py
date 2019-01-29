@@ -1,7 +1,9 @@
+
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils import timezone
 from phonenumber_field.modelfields import PhoneNumberField
 
 
@@ -46,11 +48,14 @@ class Resource(models.Model):
         return 0 if val is None else val
 
 
+
 class Review(models.Model):
     reviewer = models.ForeignKey(User, related_name='reviews', on_delete=models.CASCADE)
     item = models.ForeignKey(Resource, related_name='reviews', on_delete=models.CASCADE)
     comment = models.TextField(max_length=500)
     rating = models.IntegerField()
+    insert_date = models.DateTimeField(auto_now_add=True)
+    is_anonymous = models.BooleanField()
 
 
 class Interest(models.Model):
