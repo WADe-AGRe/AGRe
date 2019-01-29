@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block content %}
+    {% csrf_token %}
+
+    <link rel="stylesheet" href="{% static 'css/interest.css' %}">
+    <script src="{% static 'js/interests.js' %}"></script>
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css"
+          integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
+
+    <div class="container">
+        <h3 class="text-center">Manage My Interests</h3>
+        <form action="/post_interests/" method="post">
+            <div class="well" style="max-height: 400px;overflow: auto;">
+                <ul id="check-list-box" class="list-group checked-list-box">
+                    {% for interest in interests %}
+                        <li class="list-group-item" value="{{ interest.id }}"
+                            data-val="{{ interest.selected }}"> {{ interest.get_clean_name }}</li>
+                    {% endfor %}
+                </ul>
+                <br/>
+            </div>
+            <button class="btn btn-primary col-xs-12" id="get-checked-data">Update my interests</button>
+        </form>
+    </div>
+
+    <div class="modal fade" id="largeModal" tabindex="-1" role="dialog" aria-labelledby="basicModal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+
+
+                <div class="modal-body">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h3>Very nice, your interests have been updated!</h3>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Continue editing</button>
+                    <button type="button" class="btn btn-primary" id="goToHomePage">Get new recommendations</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+{% endblock %}

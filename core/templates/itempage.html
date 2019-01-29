@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block head %}
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css"
+          integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/"
+          crossorigin="anonymous">
+{% endblock %}
+{% block content %}
+    <div class="container">
+        <div class="row">
+            <div class="col-md-3">
+                {% with 'img/'|add:resource.type|add:'.png' as image_static %}
+                    <img src="{% static image_static %}" alt="sample3" width="200px"/>
+
+                {% endwith %}
+            </div>
+            <div class="col-md-8" style="font-family:Georgia;">
+                <h4>{{ resource.name }}</h4>
+                <div>
+                    {% for i in resource.stars %}
+                        <span><i class="fa fa-star" style="color:#ffca08;"></i></span>
+                    {% endfor %}
+                    {% if resource.half_star %}
+                        <span><i class="fa fa-star-half-alt" style="color:#ffca08;"></i></span>
+                    {% endif %}
+                    {% for i in resource.empty_stars %}
+                        <span><i class="far fa-star" style="color:#ffca08;"></i></span>
+                    {% endfor %}
+                </div>
+                <div style="text-align:justify;">{{ resource.description }}</div>
+                <div><b>Authors:</b> {% for auth in resource.authors %} {{ auth }} {% endfor %}</div>
+                <div><b>Publisher:</b> {{ resource.publisher }}</div>
+                <div><b>Link:</b><a href="{{ resource.url }}"> {{ resource.url }} </a></div>
+                <div><b>Tags:</b> {% for subj in resource.subjects %}
+                    <span class="badge badge-info">{{ subj }}</span> {% endfor %}</div>
+
+                <button type="button" class="btn btn-success absolute" style="position: absolute;right: 0px;"
+                        data-toggle="modal" data-target="#reviewModal">Review
+                </button>
+
+            </div>
+        </div>
+        <br/>
+        {% include 'review.html' %}
+
+    </div>
+{% endblock %}

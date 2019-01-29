@@ -1,0 +1,46 @@
+{% load bootstrap4 %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    {% bootstrap_css %}
+    {% bootstrap_javascript jquery='full' %}
+</head>
+<body>
+<div class="container">
+
+    <table class="table">
+        <thead class="thead-light">
+        <tr>
+            <th scope="col">Property</th>
+            <th scope="col">Value</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for prop, p_is_uri, obj, o_is_uri in data %}
+            <tr>
+                <td>
+                    {% if p_is_uri %}
+                        <a href="{{ prop }}">{{ prop }}</a>
+                    {% else %}
+                        {{ prop }}
+                    {% endif %}
+                </td>
+                <td>
+                    {% if o_is_uri %}
+                        <a href="{{ obj }}">{{ obj }}</a>
+                    {% else %}
+                        {{ obj }}
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+
+        </tbody>
+    </table>
+
+</div>
+</body>
+</html>

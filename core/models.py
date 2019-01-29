@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils import timezone
 from phonenumber_field.modelfields import PhoneNumberField
 
 
@@ -29,16 +30,21 @@ class Course(models.Model):
 
 
 class Resource(models.Model):
+    BOOK = 'bk'
+    ARTICLE = 'art'
+    COURSE = 'crs'
     RESOURCE_TYPES = (
-        ('bk', 'Book'),
-        ('art', 'Article'),
-        ('crs', 'Course'),
+        (BOOK, 'Book'),
+        (ARTICLE, 'Article'),
+        (COURSE, 'Course'),
     )
-    uri = models.CharField(max_length=100)
+    uri = models.CharField(max_length=100, unique=True)
     type = models.CharField(max_length=5, choices=RESOURCE_TYPES)
 
+    @property
     def rating(self):
-        return self.reviews.all().aggregate(models.Avg('rating'))
+        val = self.reviews.all().aggregate(avg=models.Avg('rating'))['avg']
+        return 0 if val is None else val
 
 
 class Review(models.Model):
@@ -46,7 +52,13 @@ class Review(models.Model):
     item = models.ForeignKey(Resource, related_name='reviews', on_delete=models.CASCADE)
     comment = models.TextField(max_length=500)
     rating = models.IntegerField()
+    insert_date = models.DateTimeField(auto_now_add=True)
+    is_anonymous = models.BooleanField()
 
 
 class Interest(models.Model):
     name = models.CharField(max_length=30)
+    selected = False
+
+    def get_clean_name(self):
+        return ' '.join(self.name.split('+')).title()

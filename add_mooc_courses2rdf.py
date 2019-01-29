@@ -4,24 +4,24 @@ from rdflib.plugins.stores import sparqlstore
 import tqdm
 
 # Define the Stardog update store
-update_endpoint = 'http://localhost:5820/demo/update'
-update_store = sparqlstore.SPARQLUpdateStore()
-update_store.open((update_endpoint, update_endpoint))
+# update_endpoint = 'http://localhost:5820/demo/update'
+# update_store = sparqlstore.SPARQLUpdateStore()
+# update_store.open((update_endpoint, update_endpoint))
 
 # Identify a named graph where we will be adding our instances.
-default_graph = URIRef('http://example.org/default-graph')
-update_g = Graph(update_store, identifier=default_graph)
-update_g.store.setCredentials('admin', 'admin')
+# default_graph = URIRef('http://example.org/default-graph')
+update_g = Graph()
+# update_g.store.setCredentials('admin', 'admin')
 
 # Define the Stardog query store
-query_endpoint = 'http://localhost:5820/demo/query'
-query_store = sparqlstore.SPARQLUpdateStore()
-query_store.open((query_endpoint, query_endpoint))
+# query_endpoint = 'http://localhost:5820/demo/query'
+# query_store = sparqlstore.SPARQLUpdateStore()
+# query_store.open((query_endpoint, query_endpoint))
 
 # Identify a named graph where we will be adding our instances.
 default_graph = URIRef('http://example.org/default-graph')
-query_g = Graph(query_store, identifier=default_graph)
-query_g.store.setCredentials('admin', 'admin')
+query_g = Graph()
+# query_g.store.setCredentials('admin', 'admin')
 
 s_person = URIRef('http://schema.org/Person')
 s_action = URIRef('http://schema.org/Action')
@@ -33,7 +33,7 @@ s_course = URIRef('http://schema.org/Course')
 s_course_instance = URIRef('http://schema.org/CourseInstance')
 
 
-print(SKOS.Concept)
+# print(SKOS.Concept)
 course = URIRef('https://www.coursera.org/learn/regression-modeling-practice')
 
 # update_g.add( (course, RDF.type, s_course) )
@@ -88,10 +88,10 @@ def add_course(g, course):
         certificate = URIRef('http://schema.org/educationalCredentialAwarded')
         g.add((uri, certificate, URIRef(course['certificate']['url'])))
 
-    if 'categories' in course:
+    if 'category' in course:
         s_category = URIRef('http://schema.org/about')
-        for category in course['categories']:
-            g.add((uri, s_category, URIRef(category['url'])))
+        # for category in course['category']:
+        g.add((uri, s_category, URIRef(course['category']['url'])))
 
     if 'description' in course:
         description = URIRef('http://schema.org/description')
@@ -169,3 +169,6 @@ if __name__ == "__main__":
         with open(file, 'r') as f:
             l = json.load(f)
         add_generic(update_g, l[:100])
+
+    update_g.serialize(destination='courses.rdf')
+
