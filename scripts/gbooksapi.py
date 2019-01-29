@@ -1,18 +1,20 @@
 import requests
 import json
 from rdflib import Graph, Literal, Namespace
-from rdflib.namespace import FOAF, RDF
+from rdflib.namespace import RDF
 
-subjects = ['vpn', 'ip', 'cryptography', 'networking', 'data+structures', 'machine+learning', 'programming', 'artificial+intelligence', 'database', 'neural+networks', 'semantic+web', 'web+technologies', 'algorithms', 'c', 'data+mining', 'big+data', 'html', 'django', 'linear', 'svm', 'sparql']
+from scripts.add_resource_to_db import add_resource
+from core.models import Resource
+from core.ontology import BOOK_NS, AUTHOR_NS, TAGS_NS, CATEGORIES_NS, BookONT, TagONT, CategoryONT, PersonONT
+
+subjects = ['vpn', 'ip', 'cryptography', 'networking', 'data+structures', 'machine+learning', 'programming',
+            'artificial+intelligence', 'database', 'neural+networks', 'semantic+web', 'web+technologies', 'algorithms',
+            'c', 'data+mining', 'big+data', 'html', 'django', 'linear', 'svm', 'sparql']
 
 key = '&key=AIzaSyC34kV2e0JxiXxth3a67SCRO-4D7Swh1XY'
 url = 'https://www.googleapis.com/books/v1/volumes?q={subject}' + key
 g = Graph()
 
-book_ns = Namespace("http://agre.org/book/")
-author_ns = Namespace("http://agre.org/author/")
-tags_ns = Namespace("http://agre.org/tags/")
-categories_ns = Namespace("http://agre.org/categories/")
 
 def getJsonFromRequest(url):
     response = requests.get(url)
@@ -25,36 +27,38 @@ def addToGraph(entry, tagName):
     book_description = entry['volumeInfo'].get('description', '')
     book_publisher = entry['volumeInfo'].get('publisher', '').replace(' ', '')
 
-    book = book_ns[book_id]
-    tag = tags_ns[tagName]
+    book = BOOK_NS[book_id]
+    tag = TAGS_NS[tagName]
 
-    g.add((book, RDF.type, FOAF.Book))
-    g.add((book, FOAF.name, Literal(entry['volumeInfo']['title'])))
-    g.add((book, FOAF.hasId, Literal(book_id)))
-    g.add((book, FOAF.hasURL, Literal(book_url)))
-    g.add((book, FOAF.hasPublisher, Literal(book_publisher)))
-    g.add((book, FOAF.hasSubject, tag))
-    g.add((book, FOAF.hasDescription, Literal(book_description)))
+    add_resource(resource_uri=book.toPython(), resource_type=Resource.BOOK)
 
-    g.add((tag, RDF.type, FOAF.Tag))
-    g.add((tag, FOAF.name, Literal(tagName)))
+    g.add((book, RDF.type, BookONT.TYPE))
+    g.add((book, BookONT.NAME, Literal(entry['volumeInfo']['title'])))
+    g.add((book, BookONT.ID, Literal(book_id)))
+    g.add((book, BookONT.URL, Literal(book_url)))
+    g.add((book, BookONT.PUBLISHER, Literal(book_publisher)))
+    g.add((book, BookONT.TAGS, tag))
+    g.add((book, BookONT.DESCRIPTION, Literal(book_description)))
+
+    g.add((tag, RDF.type, TagONT.TYPE))
+    g.add((tag, TagONT.NAME, Literal(tagName)))
 
     volInfo = entry['volumeInfo']
     for cat in volInfo.get('categories', []):
         cat_name = cat.replace(' ', '-').lower()
-        category = categories_ns[cat_name]
+        category = CATEGORIES_NS[cat_name]
 
-        g.add((category, RDF.type, FOAF.Category))
-        g.add((category, FOAF.name, Literal(cat_name)))
-        g.add((book, FOAF.hasCategory, category))
+        g.add((category, RDF.type, CategoryONT.TYPE))
+        g.add((category, CategoryONT.NAME, Literal(cat_name)))
+        g.add((book, BookONT.CATEGORY, category))
 
     for author in volInfo.get('authors', []):
         author_name = author.replace(' ', '')
-        author = author_ns[author_name]
+        author = AUTHOR_NS[author_name]
 
-        g.add((author, RDF.type, FOAF.Person))
-        g.add((author, FOAF.name, Literal(author_name)))
-        g.add((book, FOAF.hasAuthor, author))
+        g.add((author, RDF.type, PersonONT.TYPE))
+        g.add((author, PersonONT.NAME, Literal(author_name)))
+        g.add((book, BookONT.AUTHOR, author))
 
 
 def main():
@@ -68,5 +72,6 @@ def main():
             addToGraph(entry, s)
 
     g.serialize(destination='books.rdf')
+
 
 __name__ == '__main__' and main()

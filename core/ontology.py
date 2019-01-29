@@ -1,35 +1,58 @@
-from rdflib.namespace import FOAF
 from rdflib import Namespace
 
 USER_NS = Namespace("http://agre.org/user/")
-LIKES_URI = FOAF.likes
-DISLIKES_URI = FOAF.dislikes
+SCHEMA_NS = Namespace("https://schema.org/")
+
+LIKES_URI = SCHEMA_NS.likes
+DISLIKES_URI = SCHEMA_NS.dislikes
+
+ONTOLOGY_BASE_URL = "https://agre.herokuapp.com/ontology/"
+
+BOOK_NS = Namespace(ONTOLOGY_BASE_URL + "book/")
+AUTHOR_NS = Namespace(ONTOLOGY_BASE_URL + "/author/")
+TAGS_NS = Namespace(ONTOLOGY_BASE_URL + "tags/")
+CATEGORIES_NS = Namespace(ONTOLOGY_BASE_URL + "categories/")
+PUBLISHER_NS = Namespace(ONTOLOGY_BASE_URL + "publisher/")
+ARTICLE_NS = Namespace(ONTOLOGY_BASE_URL + "article/")
 
 
-class BaseONT:
+class ThingONT:
     TYPE = NotImplemented
-    NAME = FOAF.name
+    NAME = SCHEMA_NS.name
 
 
-class ArticleONT(BaseONT):
-    TYPE = FOAF.Article
-    ISSN = FOAF.hasISSN
-    AUTHOR = FOAF.hasCreator
-    URL = FOAF.hasURL
-    PUBLICATION = FOAF.hasPublication
-    SUBJECT = FOAF.hasSubject
-    AFFILIATION = FOAF.hasAffiliation
+class ResourceONT(ThingONT):
+    TYPE = SCHEMA_NS.CreativeWork
+    URL = SCHEMA_NS.url
+    PUBLISHER = SCHEMA_NS.publisher
+    CATEGORY = SCHEMA_NS.category
+    TAGS = SCHEMA_NS.keywords
+    DESCRIPTION = SCHEMA_NS.description
+    AUTHOR = SCHEMA_NS.author
 
 
-class PersonONT(BaseONT):
-    TYPE = FOAF.Person
+class ArticleONT(ResourceONT):
+    ISSN = SCHEMA_NS.issn
+    PUBLICATION = SCHEMA_NS.publication
 
 
-class TagONT(BaseONT):
-    TYPE = FOAF.Tag
+class BookONT(ResourceONT):
+    ID = SCHEMA_NS.identifier
 
 
-class AffiliationONT(BaseONT):
-    TYPE = FOAF.Affiliation
-    CITY = FOAF.hasCity
-    COUNTRY = FOAF.hasCountry
+class PersonONT(ThingONT):
+    TYPE = SCHEMA_NS.Person
+
+
+class TagONT(ThingONT):
+    TYPE = SCHEMA_NS.Text
+
+
+class PublisherONT(ThingONT):
+    TYPE = SCHEMA_NS.Organization
+    CITY = SCHEMA_NS.city
+    COUNTRY = SCHEMA_NS.country
+
+
+class CategoryONT(ThingONT):
+    TYPE = SCHEMA_NS.Category

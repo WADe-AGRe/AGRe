@@ -7,25 +7,25 @@ query_graph.setCredentials(GRAPHDB_APIKEY, GRAPHDB_SECRET)
 
 insert_graph = SPARQLWrapper2(GRAPHDB_URL + '/statements')
 insert_graph.setCredentials(GRAPHDB_APIKEY, GRAPHDB_SECRET)
+from core.ontology import ThingONT, ONTOLOGY_BASE_URL
 
-RESOURCE_DETAILS_QUERY = \
-    """select ?prop ?subj ?name where {{ 
-	?uri ?prop ?subj.
-    
-    OPTIONAL {{
-           ?subj <http://xmlns.com/foaf/0.1/name> ?name .
-    }}
-    FILTER(?uri = <{uri}>)
-    
-}} limit 100 """
+RESOURCE_DETAILS_QUERY = """
+    select ?prop ?subj ?name where {{ 
+        ?uri ?prop ?subj.
+        
+        OPTIONAL {{
+               ?subj <""" + ThingONT.NAME.toPython() + """> ?name .
+        }}
+        FILTER(?uri = <{uri}>)
+        
+    }} limit 100 """
 
 INSERT_QUERY = """
-    INSERT DATA {{ GRAPH <http://agre.com/{graph}> {{ <{subject}> <{predicate}> <{object}>. }} }}
+    INSERT DATA {{ GRAPH <""" + ONTOLOGY_BASE_URL + """"{graph}> {{ <{subject}> <{predicate}> <{object}>. }} }}
 """
 
 DELETE_REVIEW_QUERY = """
-DELETE {{?s ?p ?o}} WHERE {{
-    ?s ?p ?o .
+DELETE WHERE {{
     <{user}> ?p <{resource}>.
 }}
 """
