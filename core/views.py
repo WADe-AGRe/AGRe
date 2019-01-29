@@ -5,29 +5,24 @@ import logging
 from SPARQLWrapper import SPARQLWrapper, JSON
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, redirect
-from django.views.decorators.http import require_GET
+from django.urls import reverse
+from django.views.decorators.http import require_GET, require_POST
 
 from AGRe.settings import GRAPHDB_APIKEY, GRAPHDB_SECRET
-from core.models import Interest, Resource
-from core.forms import SignUpForm
+from core.models import Interest, Resource, Review, Profile
+from core.forms import SignUpForm, ReviewForm
 from core.queries import RESOURCE_DETAILS_QUERY, sparql
 from core.ontology import ArticleONT, AffiliationONT
 
 
 def signup(request):
-    import logging
-    logging.basicConfig(filename='mylog.log', level=logging.DEBUG)
-
     if request.method == 'POST':
         form = SignUpForm(request.POST)
         if form.is_valid():
-            logging.debug('form=%s', form.cleaned_data)
             user = form.save()
-            user.refresh_from_db()  # load the profile instance created by the signal
-            print(form.cleaned_data)
-            logging.debug('form=%s', form.cleaned_data)
+            user.refresh_from_db()
             user.profile.is_professor = form.cleaned_data.get('is_professor')
             user.profile.is_student = form.cleaned_data.get('is_student')
             user.save()
@@ -85,13 +80,14 @@ def edit_interests(request):
         return HttpResponse(status=200)
 
 
-@require_GET()
-def view_resource(request, id):
+@require_GET
+def view_resource(request):
     logging.basicConfig(filename='mylog.log', level=logging.DEBUG)
+
+    id = request.GET.get('id', -1)
     try:
         resource = Resource.objects.get(id=id)
     except Resource.DoesNotExist:
-        logging.debug('Not found' + id)
         return HttpResponse(status=404)
 
     resource_details = {}
@@ -99,9 +95,36 @@ def view_resource(request, id):
     sparql.setQuery(RESOURCE_DETAILS_QUERY.format(uri=resource.uri))
 
     ret = sparql.queryAndConvert()
-    print(ret.variables)
     for binding in ret.bindings:
         if binding['prop'].value == ArticleONT.NAME.toPython():
             resource_details['name'] = binding['subj'].value
+    try:
+        review = Review.objects.get(item=id, reviewer=request.user.id)
+    except Review.DoesNotExist:
+        review = None
+    resource_details['type'] = resource.get_type_display().lower()
 
-    return render(request, 'itempage.html', {'data': resource_details})
+    return render(request, 'itempage.html', {'data': resource_details, 'form': ReviewForm(instance=review)})
+
+
+@login_required
+@require_POST
+def send_review(request):
+    logging.basicConfig(filename='mylog.log', level=logging.DEBUG)
+
+    form = ReviewForm(request.POST)
+
+    if form.is_valid():
+        review = Review.objects.filter(item=form.cleaned_data.get('item'), reviewer=request.user.id)
+
+        if review is None or len(review) is 0:
+            review = form.save(commit=False)
+            review.reviewer = request.user
+            review.item = form.cleaned_data.get('item')
+            review.save()
+        else:
+            review.update(comment=form.cleaned_data.get('comment'), rating=form.cleaned_data.get('rating'))
+
+        return HttpResponseRedirect('/resource?id={0}'.format(form.cleaned_data.get('item').id))
+    else:
+        return render(request, '/resources', {'form': form})    

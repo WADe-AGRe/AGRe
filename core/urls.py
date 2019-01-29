@@ -6,6 +6,6 @@ urlpatterns = [
     url(r'^testDB/$', core_views.testGraphDb, name='testDB'),
     url(r'^accounts/interests/$', core_views.edit_interests, name='interests'),
 
-    url(r'^resource/(?P<id>\w{1,50})/$', core_views.view_resource,name='resource_view' ),
-
+    url(r'^resource/$', core_views.view_resource, name='resource_view'),
+    url(r'^review/$', core_views.send_review, name='review'),
 ]

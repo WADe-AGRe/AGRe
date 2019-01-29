@@ -1,0 +1,28 @@
+@import url(//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css);
+
+/* Styling h1 and links
+––––––––––––––––––––––––––––––––– */
+h1[alt="Simple"] {color: white;}
+a[href], a[href]:hover {color: grey; text-decoration: none}
+
+
+.starrating > input {display: none;}  /* Remove radio buttons */
+
+.starrating > label:before {
+  content: "\f005"; /* Star */
+  font-size: 3.5em;
+  font-family: FontAwesome;
+  display: inline-block;
+}
+
+.starrating > label
+{
+  color: #222222; /* Start color when not clicked */
+}
+
+.starrating > input:checked ~ label
+{ color: #ffca08 ; } /* Set yellow color when star checked */
+
+.starrating > input:hover ~ label
+{ color: #ffca08 ;  } /* Set yellow color when star hover */
+
