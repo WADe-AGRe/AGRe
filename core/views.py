@@ -5,9 +5,9 @@ import logging
 from SPARQLWrapper import SPARQLWrapper, JSON
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, redirect
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_GET, require_POST
 
 from AGRe.settings import GRAPHDB_APIKEY, GRAPHDB_SECRET
 from core.models import Interest, Resource, Review, Profile
@@ -111,13 +111,14 @@ class ResourceView(View):
 
         rating = resource.rating
         resource_details['stars'] = int(rating) * '*'
-        resource_details['empty_stars'] = (5 - int(rating)) * '*'
         resource_details['half_star'] = True if rating - int(rating) >= 0.25 else False
+        resource_details['empty_stars'] = (5 - int(rating) - int(resource_details['half_star'])) * '*'
         resource_details['type'] = resource.get_type_display().lower()
         return resource_details
 
     def get_resource_reviews(self, resource):
-        reviews = Review.objects.filter(item=resource).order_by(desc(Review.i))
+        reviews = Review.objects.filter(item=resource).order_by('-insert_date')
+        return reviews
 
     def get(self, request):
         id = request.GET.get('id', 0)
@@ -130,8 +131,9 @@ class ResourceView(View):
 
         resource_details = self.get_resource_info(resource)
         resource_reviews = self.get_resource_reviews(resource)
-
+        print(resource_reviews)
         return render(request, 'itempage.html', {'resource': resource_details, 'reviews': resource_reviews})
+
 
 @login_required
 @require_POST
@@ -149,7 +151,8 @@ def send_review(request):
             review.item = form.cleaned_data.get('item')
             review.save()
         else:
-            review.update(comment=form.cleaned_data.get('comment'), rating=form.cleaned_data.get('rating'))
+            review.update(comment=form.cleaned_data.get('comment'), rating=form.cleaned_data.get('rating'),
+                          is_anonymous=form.cleaned_data.get('is_anonymous'))
 
         return HttpResponseRedirect('/resource?id={0}'.format(form.cleaned_data.get('item').id))
     else:
