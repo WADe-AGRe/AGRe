@@ -21,7 +21,7 @@ RESOURCE_DETAILS_QUERY = """
     }} limit 100 """
 
 INSERT_QUERY = """
-    INSERT DATA {{ GRAPH <""" + ONTOLOGY_BASE_URL + """"{graph}> {{ <{subject}> <{predicate}> <{object}>. }} }}
+    INSERT DATA {{ GRAPH <""" + ONTOLOGY_BASE_URL + """{graph}> {{ <{subject}> <{predicate}> <{object}>. }} }}
 """
 
 DELETE_REVIEW_QUERY = """

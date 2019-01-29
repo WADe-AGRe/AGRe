@@ -155,10 +155,9 @@ def send_review(request):
             predicate = LIKES_URI
         else:
             predicate = DISLIKES_URI
-
-        insert_graph.setQuery(
-            INSERT_QUERY.format(graph='likes', subject=USER_NS[request.user.username], predicate=predicate,
-                                object=review.item.uri))
+        query = INSERT_QUERY.format(graph='likes', subject=USER_NS[request.user.username], predicate=predicate,
+                                    object=review.item.uri)
+        insert_graph.setQuery(query)
         insert_graph.setMethod('POST')
         insert_graph.query()
 
