@@ -40,8 +40,10 @@ class Resource(models.Model):
     uri = models.CharField(max_length=100, unique=True)
     type = models.CharField(max_length=5, choices=RESOURCE_TYPES)
 
+    @property
     def rating(self):
-        return self.reviews.all().aggregate(models.Avg('rating'))
+        val = self.reviews.all().aggregate(avg=models.Avg('rating'))['avg']
+        return 0 if val is None else val
 
 
 class Review(models.Model):

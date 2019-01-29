@@ -10,10 +10,11 @@ from django.shortcuts import render, redirect
 from django.views.decorators.http import require_GET
 
 from AGRe.settings import GRAPHDB_APIKEY, GRAPHDB_SECRET
-from core.models import Interest, Resource
+from core.models import Interest, Resource, Review
 from core.forms import SignUpForm
 from core.queries import RESOURCE_DETAILS_QUERY, sparql
 from core.ontology import ArticleONT, AffiliationONT
+from django.views import View
 
 
 def signup(request):
@@ -85,23 +86,54 @@ def edit_interests(request):
         return HttpResponse(status=200)
 
 
-@require_GET()
-def view_resource(request, id):
-    logging.basicConfig(filename='mylog.log', level=logging.DEBUG)
-    try:
-        resource = Resource.objects.get(id=id)
-    except Resource.DoesNotExist:
-        logging.debug('Not found' + id)
-        return HttpResponse(status=404)
+class ResourceView(View):
 
-    resource_details = {}
+    def get_resource_info(self, resource):
 
-    sparql.setQuery(RESOURCE_DETAILS_QUERY.format(uri=resource.uri))
+        subjects = []
+        authors = []
+        resource_details = {'subjects': subjects, 'authors': authors}
 
-    ret = sparql.queryAndConvert()
-    print(ret.variables)
-    for binding in ret.bindings:
-        if binding['prop'].value == ArticleONT.NAME.toPython():
-            resource_details['name'] = binding['subj'].value
+        sparql.setQuery(RESOURCE_DETAILS_QUERY.format(uri=resource.uri))
 
-    return render(request, 'itempage.html', {'data': resource_details})
+        ret = sparql.queryAndConvert()
+        print(ret.variables)
+        for binding in ret.bindings:
+            prop = binding['prop'].value
+            if prop == ArticleONT.NAME.toPython():
+                resource_details['name'] = binding['subj'].value
+            elif prop == ArticleONT.SUBJECT.toPython():
+                subjects.append(binding['name'].value.replace('+', ' '))
+            elif prop == ArticleONT.ISSN.toPython():
+                resource_details['issn'] = binding['subj'].value
+            elif prop == ArticleONT.AFFILIATION.toPython():
+                resource_details['affiliation'] = binding['name'].value
+            elif prop == ArticleONT.URL.toPython():
+                resource_details['url'] = binding['subj'].value
+            elif prop == ArticleONT.AUTHOR.toPython():
+                authors.append(binding['name'].value)
+            elif prop == ArticleONT.PUBLICATION.toPython():
+                resource_details['publication'] = binding['subj'].value
+
+        rating = resource.rating
+        resource_details['stars'] = int(rating) * '*'
+        resource_details['empty_stars'] = (5 - int(rating)) * '*'
+        resource_details['half_star'] = True if rating - int(rating) >= 0.25 else False
+        return resource_details
+
+    def get_resource_reviews(self, resource):
+        reviews = Review.objects.filter(item=resource).order_by(desc(Review.i))
+
+    def get(self, request):
+        id = request.GET.get('id', 0)
+        logging.basicConfig(filename='mylog.log', level=logging.DEBUG)
+        try:
+            resource = Resource.objects.get(id=id)
+        except Resource.DoesNotExist:
+            logging.debug('Not found' + id)
+            return HttpResponse(status=404)
+
+        resource_details = self.get_resource_info(resource)
+        resource_reviews = self.get_resource_reviews(resource)
+
+        return render(request, 'itempage.html', {'resource': resource_details, 'reviews': resource_reviews})

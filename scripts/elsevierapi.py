@@ -11,8 +11,7 @@ subjects = ['networking', 'data+structures', 'machine+learning', 'programming', 
             'neural+networks', 'semantic+web', 'web+technologies', 'algorithms', 'c', 'data+mining', 'big+data', 'html',
             'django', 'linear', 'svm', 'sparql']
 
-key = '&apiKey=7f59af901d2d86f78a1fd60c1bf9426a'
-url = 'https://api.elsevier.com/content/search/scopus?query=all({subject})' + key
+url = 'https://api.elsevier.com/content/search/scopus?query=all({subject})&apiKey=7f59af901d2d86f78a1fd60c1bf9426a'
 g = Graph()
 
 article_ns = Namespace("http://agre.org/article/")
