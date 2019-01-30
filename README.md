@@ -9,13 +9,6 @@ Considering various opinions (gossips, reviews, surveys, multilingual comments e
 
 ## Relevant links
 * Platform: http://agre.herokuapp.com
-
-* SparQL Endpoint:
-# GraphDB Credentials
-GRAPHDB_SECRET = 'od4btraghp4hln7'
-GRAPHDB_APIKEY = 's4c4gqkrdf06'
-GRAPHDB_URL = 'https://rdf.ontotext.com/4234582382/agre-graphdb/repositories/agre'
-
 * Ontologies for resources:
 ** tags example:
 https://agre.herokuapp.com/ontology/tags/machine+learning
