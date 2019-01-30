@@ -18,7 +18,7 @@ from django.views.decorators.http import require_POST
 
 from core.forms import ReviewForm
 from core.models import Interest, Resource, Review, Course
-from core.ontology import ArticleONT, USER_NS, LIKES_URI, DISLIKES_URI
+from core.ontology import ArticleONT, USER_NS, LIKES_URI, DISLIKES_URI, TAGS_NS
 from core.queries import RESOURCE_DETAILS_QUERY, query_graph, insert_graph, INSERT_QUERY, DELETE_REVIEW_QUERY
 from .forms import SignUpForm
 
@@ -260,6 +260,23 @@ def get_ontology(request):
 
 
 class HomepageView(LoginRequiredMixin, View):
+    TAGS_QUERY = """PREFIX sch: <https://schema.org/>
+
+        select distinct ?other ?name ?author_name ?description ?url  where {{
+            
+            ?other sch:name ?name .
+            ?other sch:author ?author .
+            ?author sch:name ?author_name.
+            OPTIONAL {{
+                    ?other sch:description ?description .
+                }}
+            ?other sch:url ?url .
+                ?other sch:keywords ?tag .
+            FILTER (?tag IN ({tag_set}))
+        }}
+        limit 30 
+    """
+
     CF_QUERY = """PREFIX sch: <https://schema.org/>
         select distinct ?other_user ?other ?name ?author_name ?description ?url  where {{ 
             ?user sch:likes ?first .
@@ -279,18 +296,43 @@ class HomepageView(LoginRequiredMixin, View):
                 ?user ?prop ?other .
             }}
          Filter(?user=<{username}>)
-}}"""
+}} limit 30"""
+
+    def get_tag_resource(self, username):
+        profile = User.objects.get(username=username).profile
+        skills = profile.interests.values_list('name', flat=True)
+        skill_set = ', '.join(map(lambda x: '<{}>'.format(TAGS_NS[x]), skills))
+        query = self.TAGS_QUERY.format(tag_set=skill_set)
+        print(query)
+        query_graph.setQuery(query)
+        query_graph.setMethod('GET')
+        ret = query_graph.query()
+
+        recommended_articles = []
+        for binding in ret.bindings:
+            resource = Resource.objects.get(uri=binding['other'].value)
+            article_data = {
+                'name': binding['name'].value,
+                'author': binding['author_name'].value,
+                'description': binding.get('description').value if binding.get(
+                    'description') is not None else 'No description provided',
+                'url': binding['url'].value,
+                'rating': resource.rating,
+                'reviewcomment': resource.reviews.first().comment if resource.reviews.first() is not None else 'No reviews',
+                'type': resource.get_type_display().lower(),
+            }
+            recommended_articles.append(article_data)
+        return recommended_articles
 
     def get_resources(self, username):
+        recommended_articles = self.get_tag_resource(username)
         query = self.CF_QUERY.format(username=USER_NS[username])
-        print(query)
         query_graph.setQuery(query)
         query_graph.setMethod('GET')
         ret = query_graph.query()
 
         similar_users = []
         user_set = set()
-        recommended_articles = []
         for binding in ret.bindings:
             username = binding['other_user'].value.split('/')[-1]
             user_set.add(username)
@@ -319,7 +361,7 @@ class HomepageView(LoginRequiredMixin, View):
             }
             similar_users.append(user_data)
 
-        return similar_users, recommended_articles
+        return similar_users, sorted(recommended_articles, key=lambda x: x['rating'], reverse=True)
 
     def get(self, request):
 
