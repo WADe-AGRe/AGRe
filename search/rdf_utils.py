@@ -117,7 +117,7 @@ class Article:
         self.keywords = keywords
         self.issn = issn
 
-def find_courses(search_terms=None, limit=10, offset=0):
+def find_courses(search_terms=None, limit=10, offset=0, search_tags=None):
     global course_g
 
     query_s = '''SELECT DISTINCT ?course ?name ?location ?provider ?description ?rating ?language ?provider_url
@@ -137,7 +137,7 @@ def find_courses(search_terms=None, limit=10, offset=0):
         '''
 
     if search_terms:
-        query_s += 'filter contains(lcase(str(?name)),"%s")\n' % (search_terms)
+        query_s += 'filter contains(lcase(str(?name)),"%s")\n' % (search_terms.lower())
 
     query_s += '}\nORDER BY ASC(?name)\n'
 
@@ -249,7 +249,7 @@ def find_books(search_terms=None, limit=10, offset=0):
             '''
 
     if search_terms:
-        query_s += 'filter contains(lcase(str(?name)),"%s")\n' % (search_terms)
+        query_s += 'filter contains(lcase(str(?name)),"%s")\n' % (search_terms.lower())
 
     query_s += '}\nORDER BY ASC(?name)\n'
 
@@ -343,15 +343,15 @@ def find_articles(search_terms=None, limit=10, offset=0):
              ?article rdf:type ?b . 
              ?article ?n ?name . 
              ?article ?url ?link . 
+        optional {
              ?article ?published ?publisher_url .
              ?publisher_url ?n ?publisher .
              ?article ?publicat ?publication .
-             ?article ?key ?keywords_url . 
-             ?keywords_url ?n ?keywords . 
+        }
             '''
 
     if search_terms:
-        query_s += 'filter contains(lcase(str(?name)),"%s")\n' % (search_terms)
+        query_s += 'filter contains(lcase(str(?name)),"%s")\n' % (search_terms.lower())
 
     query_s += '}\nORDER BY ASC(?name)\n'
 
@@ -364,6 +364,7 @@ def find_articles(search_terms=None, limit=10, offset=0):
 
     article2data = dict()
     for (article, name, link, keywords, publisher, publication) in qres:
+        print((article, name, link, keywords, publisher, publication))
         if article not in article2data:
             article2data[article] = {
                 'name': str(name),
@@ -372,7 +373,7 @@ def find_articles(search_terms=None, limit=10, offset=0):
                 'publication': str(publication),
                 'authors': set(),
                 'categories': set(),
-                'keywords': str(keywords),
+                'keywords': set(),
                 'rating': 0,
             }
 
@@ -380,6 +381,20 @@ def find_articles(search_terms=None, limit=10, offset=0):
     set_str = '( <' + '> , <'.join(article_set) + '> )'
 
     if len(article_set) > 0:
+        query_s = '''SELECT DISTINCT ?article ?keywords
+                        WHERE {
+                         ?article rdf:type ?b . 
+                         ?article ?key ?keywords_url . 
+                         ?keywords_url ?n ?keywords . 
+                         filter(?article IN %s)
+                         }
+                        ''' % (set_str)
+
+        key_qres = article_g.query(query_s, initBindings={'b': s_creative_work, 'hasCat': s_category, 'n': s_name2})
+
+        for (article, keywords) in key_qres:
+            article2data[article]['keywords'].add(keywords)
+
         query_s = '''SELECT DISTINCT ?article ?category
                 WHERE {
                  ?article rdf:type ?b . 
@@ -393,7 +408,6 @@ def find_articles(search_terms=None, limit=10, offset=0):
 
         for (article, category) in cat_qres:
             article2data[article]['categories'].add(category)
-
 
         query_s = '''SELECT DISTINCT ?article ?author_
                 WHERE {
@@ -413,7 +427,7 @@ def find_articles(search_terms=None, limit=10, offset=0):
     for article_url in article2data:
         article = article2data[article_url]
         b = Article(link=article['link'], name=article['name'], authors=list(article['authors']),
-                   categories=list(article['categories']), keywords=article['keywords'], publication=article['publication'],
+                   categories=list(article['categories']), keywords=", ".join(list(article['keywords'])), publication=article['publication'],
                    rating=article['rating'])
         res_articles.append(b)
     return res_articles
@@ -455,16 +469,21 @@ if __name__ == "__main__":
     # for row in qres:
     #     print(row)
 
-    size = 12
-    offset = 0
-    query = ''
+    print(find_articles())
 
-    course_results  = find_courses(query, limit=size//3, offset=offset )
-    article_results = find_articles(query, limit=size//3, offset=offset )
-    book_results    = find_books(query, limit=size-(2*(size//3)), offset=offset )
-    search_results = course_results + article_results + book_results
-    search_results.sort(key=lambda res: res.name)
-    print(len(search_results))
-    print(size//3)
-    print(article_results)
-    print(book_results)
+    #
+    # size = 12
+    # offset = 0
+    # query = ''
+    #
+    # course_results  = find_courses(query, limit=size//3, offset=offset )
+    # article_results = find_articles(query, limit=size//3, offset=offset )
+    # book_results    = find_books(query, limit=size-(2*(size//3)), offset=offset )
+    # search_results = course_results + article_results + book_results
+    # search_results.sort(key=lambda res: res.name)
+    # print(len(search_results))
+    # print(size//3)
+    # print(article_results)
+    # print(book_results)
+    #
+    #
