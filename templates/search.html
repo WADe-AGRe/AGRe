@@ -24,54 +24,42 @@
     }
 </script>
 
-<form class="card card-lg">
-    <div class="card-body row no-gutters align-items-center">
-        <div class="col-auto">
-            <i class="fas fa-search h4 text-body"></i>
-        </div>
-        <!--end of col-->
-        <div class="col">
-            <input class="form-control form-control-lg form-control-borderless" type="search"
-                   placeholder="Search topics or keywords">
-        </div>
-        <!--end of col-->
-        <div class="col-auto">
-            <button class="btn btn-lg btn-success" type="submit">Find Resources</button>
-        </div>
-        <!--end of col-->
+<div class="row">
+    <br/>
+    {% if resources.has_other_pages %}
+        <nav aria-label="...">
+            <ul class="pagination">
+                {% if resources.has_previous %}
+                    <li class="page-item"><a class="page-link"
+                                             href="?page={{ resources.previous_page_number }}">&laquo;</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled"><a class="page-link" href="#"><span>&laquo;</span></a></li>
+                {% endif %}
+                {% for i in resources.paginator.page_range %}
+                    {% if resources.number == i %}
+                        <li class="page-item active"><a class="page-link" href="#">{{ i }} <span
+                                class="sr-only">(current)</span></a></li>
+                    {% else %}
+                        <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+                    {% endif %}
+                {% endfor %}
+                {% if resources.has_next %}
+                    <li class="page-item"><a class="page-link" href="?page={{ resources.next_page_number }}">&raquo;</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled"><a class="page-link" href="#"> <span>&raquo;</span></a></li>
+                {% endif %}
+            </ul>
+        </nav>
+
+    {% endif %}
+    <div class=" col-md-2">
+        <a class="btn btn-primary" href="/search" role="button">Search resources yourself</a>
     </div>
-</form>
+</div>
 
 <!-- Search Results -->
-<br/>
-{% if resources.has_other_pages %}
-    <nav aria-label="...">
-        <ul class="pagination">
-            {% if resources.has_previous %}
-                <li class="page-item"><a class="page-link" href="?page={{ resources.previous_page_number }}">&laquo;</a>
-                </li>
-            {% else %}
-                <li class="page-item disabled"><a class="page-link" href="#"><span>&laquo;</span></a></li>
-            {% endif %}
-            {% for i in resources.paginator.page_range %}
-                {% if resources.number == i %}
-                    <li class="page-item active"><a class="page-link" href="#">{{ i }} <span
-                            class="sr-only">(current)</span></a></li>
-                {% else %}
-                    <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
-                {% endif %}
-            {% endfor %}
-            {% if resources.has_next %}
-                <li class="page-item"><a class="page-link" href="?page={{ resources.next_page_number }}">&raquo;</a>
-                </li>
-            {% else %}
-                <li class="page-item disabled"><a class="page-link" href="#"> <span>&raquo;</span></a></li>
-            {% endif %}
-        </ul>
-    </nav>
-
-{% endif %}
-
 <div class="row">
 
     {% for resource in resources %}
@@ -95,7 +83,8 @@
                         <div class="row">
 
                             <div class="col-md-8"><b>Reviews:</b> <i> {{ resource.reviewcomment }} </i></div>
-                            <a class="btn btn-primary col-md-4" href="/resource?id={{ resource.id }}" role="button">See more</a>
+                            <a class="btn btn-primary col-md-4" href="/resource?id={{ resource.id }}" role="button">See
+                                more</a>
                         </div>
                     </div>
                 </div>
