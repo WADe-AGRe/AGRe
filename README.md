@@ -8,8 +8,21 @@ Considering various opinions (gossips, reviews, surveys, multilingual comments e
 * Nechita Mihai
 
 ## Relevant links
-* Wireframes: https://5tdugv.axshare.com/#g=1&p=home_1 (pass: daw2018)
-* Blog's Github: https://github.com/WADe-AGRe/WADe-AGRe.github.io
-* Scholarly HTML: https://github.com/WADe-AGRe/WADe-AGRe.github.io/tree/master/Scholarly%20HTML
+* Platform: http://agre.herokuapp.com
+
+* SparQL Endpoint:
+# GraphDB Credentials
+GRAPHDB_SECRET = 'od4btraghp4hln7'
+GRAPHDB_APIKEY = 's4c4gqkrdf06'
+GRAPHDB_URL = 'https://rdf.ontotext.com/4234582382/agre-graphdb/repositories/agre'
+
+* Ontologies for resources:
+** tags example:
+https://agre.herokuapp.com/ontology/tags/machine+learning
+** book example:
+https://agre.herokuapp.com/ontology/book/9gpcNwAACAAJ
+** article example:
+https://agre.herokuapp.com/ontology/article/85054179748
+
 
 ### [Project Assessment Schedule](https://docs.google.com/spreadsheets/d/e/2PACX-1vQHgiJNF_FtGmju3rGs_KyubOJkiGRJeeNP_QfC2FKFSFMUaFI2N-1D2vQK4DmmWDf0MmbuULiOTpXL/pubhtml?gid=2133185353&single=true) 
