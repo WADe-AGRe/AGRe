@@ -210,20 +210,33 @@ def send_review(request):
 
 def get_ontology(request):
     good_url = request.build_absolute_uri().replace('http://localhost:8000/', 'https://agre.herokuapp.com/')
-    SELECT_QUERY = """
+    SUBJECT_QUERY = """
         select ?p ?o WHERE {{
             <{subject}> ?p ?o.
         }} limit 100 
     """
-    query_graph.setQuery(SELECT_QUERY.format(subject=good_url))
+    OBJECT_QUERY = """
+        select ?s ?p WHERE {{
+            ?s ?p <{object}>.
+        }} limit 100 
+    """
+    query_graph.setQuery(SUBJECT_QUERY.format(subject=good_url))
     ret = query_graph.query()
-    data = []
+    values = []
     for binding in ret.bindings:
         p_is_uri = True if binding['p'].type == 'uri' else False
         o_is_uri = True if binding['o'].type == 'uri' else False
-        data.append((binding['p'].value, p_is_uri, binding['o'].value, o_is_uri,))
+        values.append((binding['p'].value, p_is_uri, binding['o'].value, o_is_uri,))
 
-    return render(request, 'ontology.html', {'data': data})
+    query_graph.setQuery(OBJECT_QUERY.format(object=good_url))
+    ret = query_graph.query()
+    subjects = []
+    for binding in ret.bindings:
+        p_is_uri = True if binding['s'].type == 'uri' else False
+        o_is_uri = True if binding['p'].type == 'uri' else False
+        subjects.append((binding['s'].value, p_is_uri, binding['p'].value, o_is_uri,))
+
+    return render(request, 'ontology.html', {'values': values, 'subjects': subjects})
 
 
 class HomepageView(LoginRequiredMixin, View):

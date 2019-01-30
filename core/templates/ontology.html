@@ -10,6 +10,9 @@
 </head>
 <body>
 <div class="container">
+    <h2>is Subject of</h2>
+</div>
+<div class="container">
 
     <table class="table">
         <thead class="thead-light">
@@ -19,7 +22,7 @@
         </tr>
         </thead>
         <tbody>
-        {% for prop, p_is_uri, obj, o_is_uri in data %}
+        {% for prop, p_is_uri, obj, o_is_uri in values %}
             <tr>
                 <td>
                     {% if p_is_uri %}
@@ -42,5 +45,45 @@
     </table>
 
 </div>
+
+<div class="container">
+    <h2>is Value of</h2>
+</div>
+
+<div class="container">
+
+    <table class="table">
+        <thead class="thead-light">
+        <tr>
+            <th scope="col">Subject</th>
+            <th scope="col">Property</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for prop, p_is_uri, obj, o_is_uri in subjects %}
+            <tr>
+                <td>
+                    {% if p_is_uri %}
+                        <a href="{{ prop }}">{{ prop }}</a>
+                    {% else %}
+                        {{ prop }}
+                    {% endif %}
+                </td>
+                <td>
+                    {% if o_is_uri %}
+                        <a href="{{ obj }}">{{ obj }}</a>
+                    {% else %}
+                        {{ obj }}
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+
+        </tbody>
+    </table>
+
+</div>
+
+
 </body>
 </html>
