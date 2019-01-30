@@ -10,7 +10,7 @@ from django.shortcuts import render, redirect
 from django.views.decorators.http import require_GET, require_POST
 
 from AGRe.settings import GRAPHDB_APIKEY, GRAPHDB_SECRET
-from core.models import Interest, Resource, Review, Profile
+from core.models import Interest, Resource, Review, Profile, Course
 from core.forms import SignUpForm, ReviewForm
 from core.queries import RESOURCE_DETAILS_QUERY, query_graph, insert_graph, INSERT_QUERY, DELETE_REVIEW_QUERY
 from core.ontology import ArticleONT, AffiliationONT, USER_NS, LIKES_URI, DISLIKES_URI
@@ -31,26 +31,30 @@ def signup(request):
             raw_password = form.cleaned_data.get('password1')
             user = authenticate(username=user.username, password=raw_password)
             login(request, user)
-            return redirect('home')
+
+            return redirect('accounts/profile')
     else:
         form = SignUpForm()
     return render(request, 'registration/signup.html', {'form': form})
 
 
-@require_GET
-def testGraphDb(request):
-    sparql = SPARQLWrapper("https://rdf.ontotext.com/4234582382/agre-graphdb/repositories/agre")
-    sparql.setCredentials(GRAPHDB_APIKEY, GRAPHDB_SECRET)
-    sparql.setQuery("""SELECT * WHERE { ?s ?p ?o } LIMIT 10""")
-    sparql.setReturnFormat(JSON)
-    response = sparql.query().convert()
-    result = response["results"]["bindings"]
-    html = '<html><body><ul>'
-    print(result)
-    for each in result:
-        html += '<li>' + str(each) + '</li>'
-    html += '</ul></body></html>'
-    return HttpResponse(html)
+@login_required
+def signup_extended(request):
+    if request.method == 'POST':
+        return redirect('home')
+    else:
+        data = dict()
+        data['username'] = request.user.username
+        data['courses'] = Course.objects.all()
+        data['is_student'] = request.user.profile.is_student
+
+        interests = Interest.objects.all()
+        user_interests = request.user.profile.interests.all()
+
+        for i in user_interests:
+            [o for o in interests if o.id == i.id][0].selected = True
+
+    return render(request, 'profile.html', {'data': data, 'interests': interests })
 
 
 @login_required
@@ -94,7 +98,6 @@ class ResourceView(View):
         query_graph.setMethod('GET')
 
         ret = query_graph.queryAndConvert()
-        print(ret.variables)
         for binding in ret.bindings:
             prop = binding['prop'].value
             if prop == ArticleONT.NAME.toPython():

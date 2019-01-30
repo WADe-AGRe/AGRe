@@ -13,7 +13,7 @@ class Profile(models.Model):
     is_professor = models.BooleanField(null=True)
     is_student = models.BooleanField(null=True)
     interests = models.ManyToManyField('Interest')
-    courses = models.ManyToManyField('Course')
+    courses = models.ManyToManyField('Course', related_name='profiles')
 
 
 @receiver(post_save, sender=User)

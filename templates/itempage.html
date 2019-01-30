@@ -10,13 +10,13 @@
 {% block content %}
     <div class="container">
         <div class="row">
-            <div class="col-md-3">
+            <div class="col-md-3 mt-2">
                 {% with 'img/'|add:resource.type|add:'.png' as image_static %}
-                    <img src="{% static image_static %}" alt="sample3" width="200px"/>
+                    <img src="{% static image_static %}" alt="image" width="200px"/>
 
                 {% endwith %}
             </div>
-            <div class="col-md-8" style="font-family:Georgia;">
+            <div class="col-md-9 mt-2" style="font-family:Georgia;">
                 <h4>{{ resource.name }}</h4>
                 <div>
                     {% for i in resource.stars %}
@@ -32,7 +32,7 @@
                 <div style="text-align:justify;">{{ resource.description }}</div>
                 <div><b>Authors:</b> {% for auth in resource.authors %} {{ auth }} {% endfor %}</div>
                 <div><b>Affiliation:</b> {{ resource.affiliation }}</div>
-                <div><b>Link:</b><a href="{{ resource.url }}"> {{ resource.url }} </a></div>
+                <div><b>Link:</b><a href="{{ resource.url }}" target="_blank"> {{ resource.url }} </a></div>
                 <div><b>Tags:</b> {% for subj in resource.subjects %}
                     <span class="badge badge-info">{{ subj }}</span> {% endfor %}</div>
 

@@ -14,7 +14,7 @@ $(function () {
         }
     });
 
-    $('#goToHomePage').on('click', function(){
+    $('#goToHomePage').on('click', function () {
         window.location = '/';
     });
 
@@ -70,6 +70,7 @@ $(function () {
                 $widget.prepend('<span class="state-icon ' + settings[$widget.data('state')].icon + '"></span>');
             }
         }
+
         init();
     });
 
@@ -91,5 +92,24 @@ $(function () {
                 $('#largeModal').modal('show');
             }
         });
+
+        $('#updateInfo').on('click', function () {
+            event.preventDefault();
+            var checkedItems = [], counter = 0;
+            $("#check-list-box li.active").each(function (idx, li) {
+                checkedItems.push($(li).val());
+            });
+
+            $.ajax({
+                type: "POST",
+                traditional: true,
+                url: "",
+                async: false,
+                data: JSON.stringify({'ids': checkedItems}, null, '\t'),
+                dataType: "json",
+                error: function (data) {
+                    $('#largeModal').modal('show');
+                }
+            });
+        });
     });
-});
