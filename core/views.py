@@ -1,22 +1,28 @@
 # Create your views here.
 import json
 import logging
+import random
 
 from SPARQLWrapper import SPARQLWrapper, JSON
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, HttpResponseRedirect
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.models import User
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render, redirect
 from django.views.decorators.http import require_GET, require_POST
 
 from AGRe.settings import GRAPHDB_APIKEY, GRAPHDB_SECRET, GRAPHDB_URL
-from core.models import Interest, Resource, Review, Profile
+from core.models import Interest, Resource, Review, Profile, Course
 from core.forms import SignUpForm, ReviewForm
-from core.queries import RESOURCE_DETAILS_QUERY, query_graph, insert_graph, INSERT_QUERY, DELETE_REVIEW_QUERY
-from core.ontology import ArticleONT, PublisherONT, USER_NS, LIKES_URI, DISLIKES_URI
+from core.queries import RESOURCE_DETAILS_QUERY, query_graph, insert_graph, INSERT_QUERY, DELETE_REVIEW_QUERY, \
+    UPDATE_REVIEW_QUERY
+from core.ontology import ArticleONT, PublisherONT, USER_NS, LIKES_URI, DISLIKES_URI, RATING_URI
 from django.views import View
 
 from django.db import close_old_connections
+from django.views.decorators.csrf import csrf_exempt
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 
 
 def signup(request):
@@ -31,26 +37,48 @@ def signup(request):
             raw_password = form.cleaned_data.get('password1')
             user = authenticate(username=user.username, password=raw_password)
             login(request, user)
-            return redirect('home')
+
+            return redirect('profile')
     else:
         form = SignUpForm()
     return render(request, 'registration/signup.html', {'form': form})
 
 
-@require_GET
-def testGraphDb(request):
-    sparql = SPARQLWrapper("https://rdf.ontotext.com/4234582382/agre-graphdb/repositories/agre")
-    sparql.setCredentials(GRAPHDB_APIKEY, GRAPHDB_SECRET)
-    sparql.setQuery("""SELECT * WHERE { ?s ?p ?o } LIMIT 10""")
-    sparql.setReturnFormat(JSON)
-    response = sparql.query().convert()
-    result = response["results"]["bindings"]
-    html = '<html><body><ul>'
-    print(result)
-    for each in result:
-        html += '<li>' + str(each) + '</li>'
-    html += '</ul></body></html>'
-    return HttpResponse(html)
+@login_required
+def signup_extended(request):
+    if request.method == 'POST':
+        user = request.user
+
+        data = json.loads(request.body)
+        courses = data.get('ids', [])
+        bio = data.get('bio', '')
+        year = data.get('year', '')
+
+        user.profile.year = year
+        user.profile.bio = bio
+        for id in courses:
+            try:
+                print(id)
+                course = Course.objects.get(pk=id)
+                print(course)
+                user.profile.courses.add(course)
+                interests = course.tags
+                print(interests)
+                # for tag in interests:
+                #     user.profile.interests.add(tag)
+            except Exception as ex:
+                print(ex)
+                pass
+
+        user.save()
+        return JsonResponse({'error':'none'})
+    else:
+        data = dict()
+        data['username'] = request.user.username
+        data['courses'] = Course.objects.all()
+        data['is_student'] = request.user.profile.is_student
+
+    return render(request, 'profile.html', {'data': data })
 
 
 @login_required
@@ -79,8 +107,7 @@ def edit_interests(request):
                 pass
 
         user.save()
-        return HttpResponse(status=200)
-
+        return JsonResponse({'error':'none'})
 
 class ResourceView(View):
 
@@ -105,7 +132,7 @@ class ResourceView(View):
             prop = binding['prop'].value
             if prop == ArticleONT.NAME.toPython():
                 resource_details['name'] = self.get_binding_name(binding, "subj", "name")
-            elif prop == ArticleONT.CATEGORY.toPython():
+            elif prop == ArticleONT.TAGS.toPython():
                 subjects.append(self.get_binding_name(binding, "subj", "name").replace('+', ' '))
             elif prop == ArticleONT.ISSN.toPython():
                 resource_details['issn'] = self.get_binding_name(binding, "subj", "name")
@@ -149,17 +176,26 @@ class ResourceView(View):
 
 @login_required
 @require_POST
+@csrf_exempt
 def send_review(request):
     def add_review_graph(rating):
         if rating > 2:
             predicate = LIKES_URI
         else:
             predicate = DISLIKES_URI
-        query = INSERT_QUERY.format(graph='likes', subject=USER_NS[request.user.username], predicate=predicate,
+
+        query = INSERT_QUERY.format(graph='reviews', subject=USER_NS[request.user.username], predicate=predicate,
                                     object=review.item.uri)
         insert_graph.setQuery(query)
         insert_graph.setMethod('POST')
         insert_graph.query()
+
+        # update_query = UPDATE_REVIEW_QUERY.format(graph='reviews', subject=review.item.uri, predicate=RATING_URI,
+        #                                           value=int(review.item.rating))
+        # print(update_query)
+        # insert_graph.setQuery(update_query)
+        # insert_graph.setMethod('POST')
+        # insert_graph.query()
 
     def delete_review_graph():
         insert_graph.setQuery(DELETE_REVIEW_QUERY.format(user=USER_NS[request.user.username], resource=review.item.uri))
@@ -195,17 +231,116 @@ def send_review(request):
 
 def get_ontology(request):
     good_url = request.build_absolute_uri().replace('http://localhost:8000/', 'https://agre.herokuapp.com/')
-    SELECT_QUERY = """
+    SUBJECT_QUERY = """
         select ?p ?o WHERE {{
             <{subject}> ?p ?o.
         }} limit 100 
     """
-    query_graph.setQuery(SELECT_QUERY.format(subject=good_url))
+    OBJECT_QUERY = """
+        select ?s ?p WHERE {{
+            ?s ?p <{object}>.
+        }} limit 100 
+    """
+    query_graph.setQuery(SUBJECT_QUERY.format(subject=good_url))
     ret = query_graph.query()
-    data = []
+    values = []
     for binding in ret.bindings:
         p_is_uri = True if binding['p'].type == 'uri' else False
         o_is_uri = True if binding['o'].type == 'uri' else False
-        data.append((binding['p'].value, p_is_uri, binding['o'].value, o_is_uri,))
+        values.append((binding['p'].value, p_is_uri, binding['o'].value, o_is_uri,))
 
-    return render(request, 'ontology.html', {'data': data})
+    query_graph.setQuery(OBJECT_QUERY.format(object=good_url))
+    ret = query_graph.query()
+    subjects = []
+    for binding in ret.bindings:
+        p_is_uri = True if binding['s'].type == 'uri' else False
+        o_is_uri = True if binding['p'].type == 'uri' else False
+        subjects.append((binding['s'].value, p_is_uri, binding['p'].value, o_is_uri,))
+
+    return render(request, 'ontology.html', {'values': values, 'subjects': subjects})
+
+
+class HomepageView(LoginRequiredMixin, View):
+    CF_QUERY = """PREFIX sch: <https://schema.org/>
+        select distinct ?other_user ?other ?name ?author_name ?description ?url  where {{ 
+            ?user sch:likes ?first .
+            ?user sch:dislikes ?bad .
+            ?other_user sch:likes ?first .
+            ?other_user sch:dislikes ?bad .
+            
+            ?other sch:name ?name .
+            ?other sch:author ?author .
+            ?author sch:name ?author_name.
+            OPTIONAL {{
+                ?other sch:description ?description .
+            }}
+            ?other sch:url ?url .
+            ?other_user sch:likes ?other .
+            MINUS {{
+                ?user ?prop ?other .
+            }}
+         Filter(?user=<{username}>)
+}}"""
+
+    def get_resources(self, username):
+        query = self.CF_QUERY.format(username=USER_NS[username])
+        print(query)
+        query_graph.setQuery(query)
+        query_graph.setMethod('GET')
+        ret = query_graph.query()
+
+        similar_users = []
+        user_set = set()
+        recommended_articles = []
+        for binding in ret.bindings:
+            username = binding['other_user'].value.split('/')[-1]
+            user_set.add(username)
+            resource = Resource.objects.get(uri=binding['other'].value)
+            article_data = {
+                'name': binding['name'].value,
+                'author': binding['author_name'].value,
+                'description': binding.get('description').value if binding.get(
+                    'description') is not None else 'No description provided',
+                'url': binding['url'].value,
+                'rating': resource.rating,
+                'reviewcomment': resource.reviews.first().comment,
+                'type': resource.get_type_display().lower(),
+            }
+            recommended_articles.append(article_data)
+        print(user_set)
+        for username in user_set:
+            profile = User.objects.get(username=username).profile
+            user_data = {
+                'name': profile.get_full_name,
+                'email': profile.user.email,
+                'skills': list(profile.interests.values_list('name', flat=True)),
+                'bio': profile.bio,
+                'is_professor': profile.is_professor,
+                'username': username
+            }
+            similar_users.append(user_data)
+
+        return similar_users, recommended_articles
+
+    def get(self, request):
+
+        page = request.GET.get('page', 1)
+        if page == 1:
+            similar_users, recommended_resources = self.get_resources(request.user.username)
+            request.session['similar_users'] = similar_users
+            request.session['recommended_resources'] = recommended_resources
+        else:
+            similar_users = request.session['similar_users']
+            recommended_resources = request.session['recommended_resources']
+
+        random.shuffle(similar_users)
+        print(similar_users)
+        paginator = Paginator(recommended_resources, 4)
+        try:
+            page_resources = paginator.page(page)
+        except PageNotAnInteger:
+            page_resources = paginator.page(1)
+        except EmptyPage:
+            page_resources = paginator.page(paginator.num_pages)
+
+        return render(request, "home.html", {'users': similar_users[:4], 'resources': page_resources})

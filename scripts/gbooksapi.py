@@ -7,9 +7,8 @@ from scripts.add_resource_to_db import add_resource
 from core.models import Resource
 from core.ontology import BOOK_NS, AUTHOR_NS, TAGS_NS, CATEGORIES_NS, BookONT, TagONT, CategoryONT, PersonONT
 
-subjects = ['vpn', 'ip', 'cryptography', 'networking', 'data+structures', 'machine+learning', 'programming',
-            'artificial+intelligence', 'database', 'neural+networks', 'semantic+web', 'web+technologies', 'algorithms',
-            'c', 'data+mining', 'big+data', 'html', 'django', 'linear', 'svm', 'sparql']
+from scripts.add_interests_to_db import ALL_TAGS
+
 
 key = '&key=AIzaSyC34kV2e0JxiXxth3a67SCRO-4D7Swh1XY'
 url = 'https://www.googleapis.com/books/v1/volumes?q={subject}' + key
@@ -53,8 +52,8 @@ def addToGraph(entry, tagName):
         g.add((book, BookONT.CATEGORY, category))
 
     for author in volInfo.get('authors', []):
-        author_name = author.replace(' ', '')
-        author = AUTHOR_NS[author_name]
+        author_name = author
+        author = AUTHOR_NS[author.replace(' ', '')]
 
         g.add((author, RDF.type, PersonONT.TYPE))
         g.add((author, PersonONT.NAME, Literal(author_name)))
@@ -62,7 +61,7 @@ def addToGraph(entry, tagName):
 
 
 def main():
-    for s in subjects:
+    for s in ALL_TAGS:
         print(s)
         js = getJsonFromRequest(url.format(subject=s))
         results = js['items']

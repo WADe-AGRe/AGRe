@@ -29,3 +29,13 @@ DELETE WHERE {{
     <{user}> ?p <{resource}>.
 }}
 """
+
+UPDATE_REVIEW_QUERY = """
+    WITH <"""+ ONTOLOGY_BASE_URL + """{graph}>
+    DELETE {{ ?s ?p ?o }}
+    INSERT {{ ?s ?p {value} }}
+    WHERE
+      {{ ?s ?p ?o . 
+             FILTER (?s = <{subject}> && ?p = <{predicate}>) 
+  }}
+"""
