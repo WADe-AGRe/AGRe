@@ -13,6 +13,11 @@ class Profile(models.Model):
     is_professor = models.BooleanField(null=True)
     is_student = models.BooleanField(null=True)
     interests = models.ManyToManyField('Interest')
+    courses = models.ManyToManyField('Course', related_name='profiles')
+
+    @property
+    def get_full_name(self):
+        return '{} {}'.format(self.user.first_name, self.user.last_name).title()
 
 
 @receiver(post_save, sender=User)
@@ -27,6 +32,7 @@ class Course(models.Model):
     year = models.IntegerField(null=True)
     timetable = models.CharField(null=True, max_length=300)
     duration = models.CharField(null=True, max_length=30)
+    tags = models.ManyToManyField('Interest', related_name='courses')
 
 
 class Resource(models.Model):

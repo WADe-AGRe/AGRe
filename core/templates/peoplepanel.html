@@ -1,0 +1,33 @@
+{% load static %}
+
+<ul class="list-group list-group-flush">
+    {% for user in users %}
+        <li class="list-group-item" style="max-width: 25rem;">
+            <div class="media">
+                {% if user.is_professor %}
+                    <img src="{% static 'img/professor.png' %}" class="img-rounded" style="width:110px;">
+                {% else %}
+                    <img src="{% static 'img/student.png' %}" class="img-rounded" style="width:110px;">
+                {% endif %}
+                <div class="media-body">
+                    <h5 class="mt-0">{{ user.name }}</h5>
+                    <div class="row ml-1">
+                        <b>@{{ user.username }}</b>
+                    </div>
+                    <div class="row ml-1">
+                        <i>{{ user.bio }}</i>
+                    </div>
+                    <div class="row ml-1">
+                        <b>Skills:</b>
+                        {% for skill in user.skills %}
+                            <span class="badge badge-info ml-1">{{ skill }}</span>
+                        {% endfor %}
+                    </div>
+                    <div class="row ml-1">
+                        <span class="input-group-addon"><span class="fa fa-envelope"></span>{{ user.email }}</span>
+                    </div>
+                </div>
+            </div>
+        </li>
+    {% endfor %}
+</ul>

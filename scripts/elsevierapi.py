@@ -10,9 +10,7 @@ from core.models import Resource
 from core.ontology import ArticleONT, PersonONT, TagONT, PublisherONT, ARTICLE_NS, PUBLISHER_NS, AUTHOR_NS, \
     TAGS_NS
 
-subjects = ['networking', 'data+structures', 'machine+learning', 'programming', 'artificial+intelligence', 'database',
-            'neural+networks', 'semantic+web', 'web+technologies', 'algorithms', 'c', 'data+mining', 'big+data', 'html',
-            'django', 'linear', 'svm', 'sparql']
+from scripts.add_interests_to_db import ALL_TAGS
 
 url = 'https://api.elsevier.com/content/search/scopus?query=all({subject})&apiKey=7f59af901d2d86f78a1fd60c1bf9426a'
 g = Graph()
@@ -68,7 +66,7 @@ def addToGraph(entry, tagName):
 
 
 def main():
-    for s in subjects:
+    for s in ALL_TAGS:
         print(s)
         js = getJsonFromRequest(url.format(subject=s))
         results = js['search-results']['entry']
