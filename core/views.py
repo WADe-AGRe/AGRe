@@ -8,7 +8,7 @@ from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render, redirect
 from django.views.decorators.http import require_GET, require_POST
 
@@ -38,8 +38,7 @@ def signup(request):
             user = authenticate(username=user.username, password=raw_password)
             login(request, user)
 
-            courses = Course.objects.all()
-            return redirect('accounts/profile')
+            return redirect('profile')
     else:
         form = SignUpForm()
     return render(request, 'registration/signup.html', {'form': form})
