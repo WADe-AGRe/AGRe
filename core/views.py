@@ -311,6 +311,7 @@ class HomepageView(LoginRequiredMixin, View):
                 'rating': resource.rating,
                 'reviewcomment': resource.reviews.first().comment if resource.reviews.first() is not None else 'No reviews',
                 'type': resource.get_type_display().lower(),
+                'id': resource.id
             }
             recommended_articles.append(article_data)
         return recommended_articles
