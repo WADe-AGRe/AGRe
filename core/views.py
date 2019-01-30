@@ -57,18 +57,11 @@ def signup_extended(request):
         user.profile.year = year
         user.profile.bio = bio
         for id in courses:
-            try:
-                print(id)
-                course = Course.objects.get(pk=id)
-                print(course)
-                user.profile.courses.add(course)
-                interests = course.tags
-                print(interests)
-                # for tag in interests:
-                #     user.profile.interests.add(tag)
-            except Exception as ex:
-                print(ex)
-                pass
+            course = Course.objects.get(pk=id)
+            user.profile.courses.add(course)
+            interests = course.tags.all()
+            for tag in interests:
+                user.profile.interests.add(tag)
 
         user.save()
         return JsonResponse({'error':'none'})
@@ -128,7 +121,6 @@ class ResourceView(View):
         ret = query_graph.queryAndConvert()
         print(ret.variables)
         for binding in ret.bindings:
-            print(binding)
             prop = binding['prop'].value
             if prop == ArticleONT.NAME.toPython():
                 resource_details['name'] = self.get_binding_name(binding, "subj", "name")
@@ -165,7 +157,6 @@ class ResourceView(View):
         try:
             resource = Resource.objects.get(id=id)
         except Resource.DoesNotExist:
-            logging.debug('Not found' + id)
             return HttpResponse(status=404)
 
         resource_details = self.get_resource_info(resource)
@@ -292,6 +283,7 @@ class HomepageView(LoginRequiredMixin, View):
                 'rating': resource.rating,
                 'reviewcomment': resource.reviews.first().comment,
                 'type': resource.get_type_display().lower(),
+                'id': resource.id
             }
             recommended_articles.append(article_data)
         print(user_set)
