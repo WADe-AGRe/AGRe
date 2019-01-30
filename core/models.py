@@ -15,6 +15,10 @@ class Profile(models.Model):
     interests = models.ManyToManyField('Interest')
     courses = models.ManyToManyField('Course', related_name='profiles')
 
+    @property
+    def get_full_name(self):
+        return '{} {}'.format(self.user.first_name, self.user.last_name).title()
+
 
 @receiver(post_save, sender=User)
 def update_user_profile(sender, instance, created, **kwargs):

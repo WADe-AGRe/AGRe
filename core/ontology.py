@@ -4,6 +4,7 @@ SCHEMA_NS = Namespace("https://schema.org/")
 
 LIKES_URI = SCHEMA_NS.likes
 DISLIKES_URI = SCHEMA_NS.dislikes
+RATING_URI = SCHEMA_NS.rating
 
 ONTOLOGY_BASE_URL = "https://agre.herokuapp.com/ontology/"
 
