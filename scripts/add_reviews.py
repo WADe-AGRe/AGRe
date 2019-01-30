@@ -11,10 +11,10 @@ RESOURCE_URL = BASE_URL + 'resource/?id={}/'
 PASS = 'cacacaca'
 
 users = ['eve30', 'eve31', 'mihai30', 'mihai31', 'andrei30', 'andrei31', 'test', 'eve29', 'testtest', ]
-messages = ['Very nice', "sucks", 'Not good', 'best book ever', 'Super', 'Not that nice']
+messages = ['Very nice', "It was good", 'Not good', 'best book ever', 'Super', 'Not that nice', 'Insightful', 'I reallt enjoyed this', 'Didnt do it for me']
 
-min_id = 2100
-max_id = 2150
+min_id = 3200
+max_id = 3250
 
 
 def main():
