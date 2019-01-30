@@ -3,26 +3,24 @@ import json
 import logging
 import random
 
-from SPARQLWrapper import SPARQLWrapper, JSON
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
-from django.shortcuts import render, redirect
-from django.views.decorators.http import require_GET, require_POST
-
-from AGRe.settings import GRAPHDB_APIKEY, GRAPHDB_SECRET, GRAPHDB_URL
-from core.models import Interest, Resource, Review, Profile, Course
-from core.forms import SignUpForm, ReviewForm
-from core.queries import RESOURCE_DETAILS_QUERY, query_graph, insert_graph, INSERT_QUERY, DELETE_REVIEW_QUERY, \
-    UPDATE_REVIEW_QUERY
-from core.ontology import ArticleONT, PublisherONT, USER_NS, LIKES_URI, DISLIKES_URI, RATING_URI
-from django.views import View
-
-from django.db import close_old_connections
-from django.views.decorators.csrf import csrf_exempt
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+from django.db import close_old_connections
+from django.http import HttpResponse
+from django.http import HttpResponseRedirect, JsonResponse
+from django.shortcuts import render, redirect
+from django.views import View
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+
+from core.forms import ReviewForm
+from core.models import Interest, Resource, Review, Course
+from core.ontology import ArticleONT, USER_NS, LIKES_URI, DISLIKES_URI
+from core.queries import RESOURCE_DETAILS_QUERY, query_graph, insert_graph, INSERT_QUERY, DELETE_REVIEW_QUERY
+from .forms import SignUpForm
 
 
 def signup(request):
@@ -64,14 +62,14 @@ def signup_extended(request):
                 user.profile.interests.add(tag)
 
         user.save()
-        return JsonResponse({'error':'none'})
+        return JsonResponse({'error': 'none'})
     else:
         data = dict()
         data['username'] = request.user.username
         data['courses'] = Course.objects.all()
         data['is_student'] = request.user.profile.is_student
 
-    return render(request, 'profile.html', {'data': data })
+    return render(request, 'profile.html', {'data': data})
 
 
 @login_required
@@ -100,7 +98,8 @@ def edit_interests(request):
                 pass
 
         user.save()
-        return JsonResponse({'error':'none'})
+        return JsonResponse({'error': 'none'})
+
 
 class ResourceView(View):
 
@@ -222,20 +221,33 @@ def send_review(request):
 
 def get_ontology(request):
     good_url = request.build_absolute_uri().replace('http://localhost:8000/', 'https://agre.herokuapp.com/')
-    SELECT_QUERY = """
+    SUBJECT_QUERY = """
         select ?p ?o WHERE {{
             <{subject}> ?p ?o.
         }} limit 100 
     """
-    query_graph.setQuery(SELECT_QUERY.format(subject=good_url))
+    OBJECT_QUERY = """
+        select ?s ?p WHERE {{
+            ?s ?p <{object}>.
+        }} limit 100 
+    """
+    query_graph.setQuery(SUBJECT_QUERY.format(subject=good_url))
     ret = query_graph.query()
-    data = []
+    values = []
     for binding in ret.bindings:
         p_is_uri = True if binding['p'].type == 'uri' else False
         o_is_uri = True if binding['o'].type == 'uri' else False
-        data.append((binding['p'].value, p_is_uri, binding['o'].value, o_is_uri,))
+        values.append((binding['p'].value, p_is_uri, binding['o'].value, o_is_uri,))
 
-    return render(request, 'ontology.html', {'data': data})
+    query_graph.setQuery(OBJECT_QUERY.format(object=good_url))
+    ret = query_graph.query()
+    subjects = []
+    for binding in ret.bindings:
+        p_is_uri = True if binding['s'].type == 'uri' else False
+        o_is_uri = True if binding['p'].type == 'uri' else False
+        subjects.append((binding['s'].value, p_is_uri, binding['p'].value, o_is_uri,))
+
+    return render(request, 'ontology.html', {'values': values, 'subjects': subjects})
 
 
 class HomepageView(LoginRequiredMixin, View):
