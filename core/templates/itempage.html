@@ -31,7 +31,7 @@
                 </div>
                 <div style="text-align:justify;">{{ resource.description }}</div>
                 <div><b>Authors:</b> {% for auth in resource.authors %} {{ auth }} {% endfor %}</div>
-                <div><b>Affiliation:</b> {{ resource.affiliation }}</div>
+                <div><b>Publisher:</b> {{ resource.publisher }}</div>
                 <div><b>Link:</b><a href="{{ resource.url }}"> {{ resource.url }} </a></div>
                 <div><b>Tags:</b> {% for subj in resource.subjects %}
                     <span class="badge badge-info">{{ subj }}</span> {% endfor %}</div>

@@ -1,11 +1,14 @@
-import requests
 import json
-from rdflib import Graph, Literal, Namespace
+
+import requests
+from rdflib import Graph, Literal
 from rdflib.namespace import RDF
 
 from scripts.add_resource_to_db import add_resource
+
 from core.models import Resource
-from core.ontology import ArticleONT, PersonONT, TagONT, AffiliationONT
+from core.ontology import ArticleONT, PersonONT, TagONT, PublisherONT, ARTICLE_NS, PUBLISHER_NS, AUTHOR_NS, \
+    TAGS_NS
 
 subjects = ['networking', 'data+structures', 'machine+learning', 'programming', 'artificial+intelligence', 'database',
             'neural+networks', 'semantic+web', 'web+technologies', 'algorithms', 'c', 'data+mining', 'big+data', 'html',
@@ -13,11 +16,6 @@ subjects = ['networking', 'data+structures', 'machine+learning', 'programming', 
 
 url = 'https://api.elsevier.com/content/search/scopus?query=all({subject})&apiKey=7f59af901d2d86f78a1fd60c1bf9426a'
 g = Graph()
-
-article_ns = Namespace("http://agre.org/article/")
-author_ns = Namespace("http://agre.org/author/")
-affiliation_ns = Namespace("http://agre.org/affiliation/")
-tags_ns = Namespace("http://agre.org/tags/")
 
 
 def getJsonFromRequest(url):
@@ -33,9 +31,9 @@ def addToGraph(entry, tagName):
         return
     article_uri = entry["dc:identifier"].split(':')[1]
 
-    article = article_ns[article_uri]
-    creator = author_ns[creator_name.replace(' ', '')]
-    tag = tags_ns[tagName]
+    article = ARTICLE_NS[article_uri]
+    creator = AUTHOR_NS[creator_name.replace(' ', '')]
+    tag = TAGS_NS[tagName]
 
     add_resource(resource_uri=article.toPython(), resource_type=Resource.ARTICLE)
 
@@ -44,7 +42,8 @@ def addToGraph(entry, tagName):
     g.add((article, ArticleONT.ISSN, Literal(article_issn)))
     g.add((article, ArticleONT.URL, Literal(article_url)))
     g.add((article, ArticleONT.PUBLICATION, Literal(entry['prism:publicationName'])))
-    g.add((article, ArticleONT.SUBJECT, tag))
+    g.add((article, ArticleONT.CATEGORY, tag))
+    g.add((article, ArticleONT.TAGS, tag))
     g.add((article, ArticleONT.AUTHOR, creator))
 
     g.add((creator, RDF.type, PersonONT.TYPE))
@@ -58,14 +57,14 @@ def addToGraph(entry, tagName):
         aff_city = aff['affiliation-city']
         aff_country = aff['affiliation-country']
 
-        affiliation = affiliation_ns[
+        affiliation = PUBLISHER_NS[
             '{}-{}-{}'.format(aff_name, aff_city, aff_country).replace(' ', '')]
 
-        g.add((affiliation, RDF.type, AffiliationONT.TYPE))
-        g.add((affiliation, AffiliationONT.NAME, Literal(aff_name)))
-        g.add((affiliation, AffiliationONT.CITY, Literal(aff_city)))
-        g.add((affiliation, AffiliationONT.COUNTRY, Literal(aff_country)))
-        g.add((article, ArticleONT.AFFILIATION, affiliation))
+        g.add((affiliation, RDF.type, PublisherONT.TYPE))
+        g.add((affiliation, PublisherONT.NAME, Literal(aff_name)))
+        g.add((affiliation, PublisherONT.CITY, Literal(aff_city)))
+        g.add((affiliation, PublisherONT.COUNTRY, Literal(aff_country)))
+        g.add((article, ArticleONT.PUBLISHER, affiliation))
 
 
 def main():
@@ -76,7 +75,10 @@ def main():
 
         # create rdf objects
         for entry in results:
-            addToGraph(entry, s)
+            try:
+                addToGraph(entry, s)
+            except:
+                pass
 
     g.serialize(destination='articles.rdf')
 

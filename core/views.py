@@ -9,14 +9,14 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.views.decorators.http import require_GET, require_POST
 
-from AGRe.settings import GRAPHDB_APIKEY, GRAPHDB_SECRET
+from AGRe.settings import GRAPHDB_APIKEY, GRAPHDB_SECRET, GRAPHDB_URL
 from core.models import Interest, Resource, Review, Profile
 from core.forms import SignUpForm, ReviewForm
 from core.queries import RESOURCE_DETAILS_QUERY, query_graph, insert_graph, INSERT_QUERY, DELETE_REVIEW_QUERY
-from core.ontology import ArticleONT, AffiliationONT, USER_NS, LIKES_URI, DISLIKES_URI
+from core.ontology import ArticleONT, PublisherONT, USER_NS, LIKES_URI, DISLIKES_URI
 from django.views import View
 
-from rdflib import URIRef
+from django.db import close_old_connections
 
 
 def signup(request):
@@ -84,6 +84,11 @@ def edit_interests(request):
 
 class ResourceView(View):
 
+    def get_binding_name(self, binding, key1, key2):
+        if binding[key1].type == 'uri':
+            return binding[key2].value
+        return binding[key1].value
+
     def get_resource_info(self, resource):
 
         subjects = []
@@ -96,21 +101,24 @@ class ResourceView(View):
         ret = query_graph.queryAndConvert()
         print(ret.variables)
         for binding in ret.bindings:
+            print(binding)
             prop = binding['prop'].value
             if prop == ArticleONT.NAME.toPython():
-                resource_details['name'] = binding['subj'].value
-            elif prop == ArticleONT.SUBJECT.toPython():
-                subjects.append(binding['name'].value.replace('+', ' '))
+                resource_details['name'] = self.get_binding_name(binding, "subj", "name")
+            elif prop == ArticleONT.CATEGORY.toPython():
+                subjects.append(self.get_binding_name(binding, "subj", "name").replace('+', ' '))
             elif prop == ArticleONT.ISSN.toPython():
-                resource_details['issn'] = binding['subj'].value
-            elif prop == ArticleONT.AFFILIATION.toPython():
-                resource_details['affiliation'] = binding['name'].value
+                resource_details['issn'] = self.get_binding_name(binding, "subj", "name")
+            elif prop == ArticleONT.PUBLISHER.toPython():
+                resource_details['publisher'] = self.get_binding_name(binding, "subj", "name")
             elif prop == ArticleONT.URL.toPython():
-                resource_details['url'] = binding['subj'].value
+                resource_details['url'] = self.get_binding_name(binding, "subj", "name")
             elif prop == ArticleONT.AUTHOR.toPython():
-                authors.append(binding['name'].value)
+                authors.append(self.get_binding_name(binding, "subj", "name"))
             elif prop == ArticleONT.PUBLICATION.toPython():
-                resource_details['publication'] = binding['subj'].value
+                resource_details['publication'] = self.get_binding_name(binding, "subj", "name")
+            elif prop == ArticleONT.DESCRIPTION.toPython():
+                resource_details['description'] = self.get_binding_name(binding, "subj", "name")
 
         rating = resource.rating
         resource_details['stars'] = int(rating) * '*'
@@ -124,6 +132,7 @@ class ResourceView(View):
         return reviews
 
     def get(self, request):
+        close_old_connections()
         id = request.GET.get('id', 0)
         logging.basicConfig(filename='mylog.log', level=logging.DEBUG)
         try:
@@ -146,10 +155,9 @@ def send_review(request):
             predicate = LIKES_URI
         else:
             predicate = DISLIKES_URI
-
-        insert_graph.setQuery(
-            INSERT_QUERY.format(graph='likes', subject=USER_NS[request.user.username], predicate=predicate,
-                                object=review.item.uri))
+        query = INSERT_QUERY.format(graph='likes', subject=USER_NS[request.user.username], predicate=predicate,
+                                    object=review.item.uri)
+        insert_graph.setQuery(query)
         insert_graph.setMethod('POST')
         insert_graph.query()
 
@@ -183,3 +191,21 @@ def send_review(request):
         return HttpResponseRedirect('/resource?id={0}'.format(form.cleaned_data.get('item').id))
     else:
         return render(request, '/resources', {'form': form})
+
+
+def get_ontology(request):
+    good_url = request.build_absolute_uri().replace('http://localhost:8000/', 'https://agre.herokuapp.com/')
+    SELECT_QUERY = """
+        select ?p ?o WHERE {{
+            <{subject}> ?p ?o.
+        }} limit 100 
+    """
+    query_graph.setQuery(SELECT_QUERY.format(subject=good_url))
+    ret = query_graph.query()
+    data = []
+    for binding in ret.bindings:
+        p_is_uri = True if binding['p'].type == 'uri' else False
+        o_is_uri = True if binding['o'].type == 'uri' else False
+        data.append((binding['p'].value, p_is_uri, binding['o'].value, o_is_uri,))
+
+    return render(request, 'ontology.html', {'data': data})
