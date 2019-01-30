@@ -8,12 +8,12 @@ from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render, redirect
 from django.views.decorators.http import require_GET, require_POST
 
 from AGRe.settings import GRAPHDB_APIKEY, GRAPHDB_SECRET, GRAPHDB_URL
-from core.models import Interest, Resource, Review, Profile
+from core.models import Interest, Resource, Review, Profile, Course
 from core.forms import SignUpForm, ReviewForm
 from core.queries import RESOURCE_DETAILS_QUERY, query_graph, insert_graph, INSERT_QUERY, DELETE_REVIEW_QUERY, \
     UPDATE_REVIEW_QUERY
@@ -37,26 +37,48 @@ def signup(request):
             raw_password = form.cleaned_data.get('password1')
             user = authenticate(username=user.username, password=raw_password)
             login(request, user)
-            return redirect('home')
+
+            return redirect('profile')
     else:
         form = SignUpForm()
     return render(request, 'registration/signup.html', {'form': form})
 
 
-@require_GET
-def testGraphDb(request):
-    sparql = SPARQLWrapper("https://rdf.ontotext.com/4234582382/agre-graphdb/repositories/agre")
-    sparql.setCredentials(GRAPHDB_APIKEY, GRAPHDB_SECRET)
-    sparql.setQuery("""SELECT * WHERE { ?s ?p ?o } LIMIT 10""")
-    sparql.setReturnFormat(JSON)
-    response = sparql.query().convert()
-    result = response["results"]["bindings"]
-    html = '<html><body><ul>'
-    print(result)
-    for each in result:
-        html += '<li>' + str(each) + '</li>'
-    html += '</ul></body></html>'
-    return HttpResponse(html)
+@login_required
+def signup_extended(request):
+    if request.method == 'POST':
+        user = request.user
+
+        data = json.loads(request.body)
+        courses = data.get('ids', [])
+        bio = data.get('bio', '')
+        year = data.get('year', '')
+
+        user.profile.year = year
+        user.profile.bio = bio
+        for id in courses:
+            try:
+                print(id)
+                course = Course.objects.get(pk=id)
+                print(course)
+                user.profile.courses.add(course)
+                interests = course.tags
+                print(interests)
+                # for tag in interests:
+                #     user.profile.interests.add(tag)
+            except Exception as ex:
+                print(ex)
+                pass
+
+        user.save()
+        return JsonResponse({'error':'none'})
+    else:
+        data = dict()
+        data['username'] = request.user.username
+        data['courses'] = Course.objects.all()
+        data['is_student'] = request.user.profile.is_student
+
+    return render(request, 'profile.html', {'data': data })
 
 
 @login_required
@@ -85,8 +107,7 @@ def edit_interests(request):
                 pass
 
         user.save()
-        return HttpResponse(status=200)
-
+        return JsonResponse({'error':'none'})
 
 class ResourceView(View):
 
